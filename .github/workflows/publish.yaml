@@ -28,4 +28,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: build/libs/!(*-@(dev|sources)).jar
-          tag_name: ${{ github.ref }}
+          tag_name: ${{ github.ref_name }}
