@@ -3,6 +3,7 @@ package com.buuz135.functionalstorage.recipe;
 
 import com.buuz135.functionalstorage.block.CompactingDrawerBlock;
 import com.buuz135.functionalstorage.block.FramedDrawerBlock;
+import com.buuz135.functionalstorage.util.StorageTags;
 import com.google.common.collect.Lists;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.CraftingContainer;
@@ -26,12 +27,19 @@ public class FramedDrawerRecipe extends CustomRecipe {
 
     public static boolean matches(ItemStack first, ItemStack second, ItemStack drawer) {
         //System.out.println(((BlockItem) drawer.getItem()).getBlock().getClass());
-        return !first.isEmpty() && first.getItem() instanceof BlockItem && !second.isEmpty() && second.getItem() instanceof BlockItem && !drawer.isEmpty() && drawer.getItem() instanceof BlockItem && ((BlockItem) drawer.getItem()).getBlock() instanceof FramedDrawerBlock;
+
+        return !first.isEmpty() && first.getItem() instanceof BlockItem && !first.is(StorageTags.FRAMED_BLACKLIST) &&
+                !second.isEmpty() && second.getItem() instanceof BlockItem && !second.is(StorageTags.FRAMED_BLACKLIST) &&
+                !drawer.isEmpty() && drawer.getItem() instanceof BlockItem &&
+                ((BlockItem) drawer.getItem()).getBlock() instanceof FramedDrawerBlock;
     }
 
     public static boolean matchesCompacting(ItemStack first, ItemStack second, ItemStack drawer) {
         //System.out.println(((BlockItem) drawer.getItem()).getBlock().getClass());
-        return !first.isEmpty() && first.getItem() instanceof BlockItem && !second.isEmpty() && second.getItem() instanceof BlockItem && !drawer.isEmpty() && drawer.getItem() instanceof BlockItem && ((BlockItem) drawer.getItem()).getBlock() instanceof CompactingDrawerBlock;
+        return !first.isEmpty() && first.getItem() instanceof BlockItem && !first.is(StorageTags.FRAMED_BLACKLIST) &&
+                !second.isEmpty() && second.getItem() instanceof BlockItem && !second.is(StorageTags.FRAMED_BLACKLIST) &&
+                !drawer.isEmpty() && drawer.getItem() instanceof BlockItem &&
+                ((BlockItem) drawer.getItem()).getBlock() instanceof CompactingDrawerBlock;
     }
 
     @Override

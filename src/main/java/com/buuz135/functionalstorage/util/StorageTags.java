@@ -11,5 +11,6 @@ public class StorageTags {
 
     public static TagKey<Item> DRAWER = ItemTags.create(new ResourceLocation(FunctionalStorage.MOD_ID, "drawer"));
     public static TagKey<Item> IGNORE_CRAFTING_CHECK = ItemTags.create(new ResourceLocation(FunctionalStorage.MOD_ID, "ignore_crafting_check"));
+    public static TagKey<Item> FRAMED_BLACKLIST = ItemTags.create(new ResourceLocation(FunctionalStorage.MOD_ID, "framed_blacklist"));
 
 }
