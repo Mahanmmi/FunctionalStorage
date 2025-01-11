@@ -26,8 +26,11 @@ jobs:
         run: chmod +x ./gradlew
       - name: build
         run: ./gradlew build
+      - name: Set current date as env variable
+        run: echo "NOW=$(date +'%Y-%m-%dT%H:%M:%S')" >> $GITHUB_ENV
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           files: build/libs/!(*-@(dev|sources)).jar
-          tag_name: ${{ github.ref_name }}
+#          use the current date time as the release name
+          tag_name: release-${{ env.NOW }}
