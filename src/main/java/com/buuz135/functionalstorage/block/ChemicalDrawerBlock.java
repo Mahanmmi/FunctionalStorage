@@ -151,6 +151,10 @@ public class ChemicalDrawerBlock extends Drawer<ChemicalDrawerTile> {
                     components.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.translatable("drawer.block.upgrades.is_void").withStyle(ChatFormatting.BLUE)));
                     anyupgrade = true;
                 }
+                if (FunctionalStorage.MEKANISM_LOADED && tile.contains("isRadioactive") && tile.getBoolean("isRadioactive")) {
+                    components.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.translatable("drawer.block.upgrades.is_radioactive").withStyle(ChatFormatting.YELLOW)));
+                    anyupgrade = true;
+                }
                 if (!anyupgrade) {
                     components.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.translatable("drawer.block.upgrades.none").withStyle(ChatFormatting.GRAY)));
                 }

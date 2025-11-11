@@ -48,6 +48,11 @@ public class FunctionalStorageRecipesProvider extends RecipeProvider {
                 .define('I', Tags.Items.OBSIDIANS)
                 .define('D', StorageTags.DRAWER)
                 .save(output);
+        
+        // Radioactive upgrade recipe (conditional on Mekanism)
+        if (MEKANISM_LOADED && RADIOACTIVE_UPGRADE != null) {
+            com.buuz135.functionalstorage.item.RadioactiveUpgradeItem.registerRecipe(output);
+        }
         TitaniumShapedRecipeBuilder.shapedRecipe(CONFIGURATION_TOOL.get())
                 .pattern("PPG").pattern("PDG").pattern("PEP")
                 .define('P', Items.PAPER)

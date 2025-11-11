@@ -1,6 +1,8 @@
 package com.buuz135.functionalstorage.client.gui;
 
+import com.buuz135.functionalstorage.FunctionalStorage;
 import com.buuz135.functionalstorage.chemical.BigChemicalHandler;
+
 import com.buuz135.functionalstorage.util.NumberUtils;
 import com.hrznstudio.titanium.client.screen.addon.BasicScreenAddon;
 import com.hrznstudio.titanium.client.screen.asset.IAssetProvider;
@@ -20,6 +22,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -36,10 +39,10 @@ public class ChemicalDrawerInfoGuiAddon extends BasicScreenAddon {
     private final Supplier<BigChemicalHandler> chemicalHandlerSupplier;
     private final Function<Integer, Long> slotMaxAmount;
 
-    public ChemicalDrawerInfoGuiAddon(int posX, int posY, ResourceLocation gui, int slotAmount, 
-                                     Function<Integer, Pair<Integer, Integer>> slotPosition, 
-                                     Supplier<BigChemicalHandler> chemicalHandlerSupplier, 
-                                     Function<Integer, Long> slotMaxAmount) {
+    public ChemicalDrawerInfoGuiAddon(int posX, int posY, ResourceLocation gui, int slotAmount,
+                                      Function<Integer, Pair<Integer, Integer>> slotPosition,
+                                      Supplier<BigChemicalHandler> chemicalHandlerSupplier,
+                                      Function<Integer, Long> slotMaxAmount) {
         super(posX, posY);
         this.gui = gui;
         this.slotAmount = slotAmount;
@@ -110,6 +113,9 @@ public class ChemicalDrawerInfoGuiAddon extends BasicScreenAddon {
                     componentList.add(Component.translatable("gui.functionalstorage.chemical").withStyle(ChatFormatting.GOLD).append(over.getChemical().getTextComponent().copy().withStyle(style -> style.withColor(chemicalColor))));
                     var amount = NumberUtils.getFormatedFluidBigNumber(over.getAmount()) + "/" + NumberUtils.getFormatedFluidBigNumber(slotMaxAmount.apply(i));
                     componentList.add(Component.translatable("gui.functionalstorage.amount").withStyle(ChatFormatting.GOLD).append(Component.literal(amount).withStyle(ChatFormatting.WHITE)));
+                    
+                    // Add radioactive mode information if applicable
+                    addRadioactiveInformation(componentList, over);
                 }
                 componentList.add(Component.translatable("gui.functionalstorage.slot").withStyle(ChatFormatting.GOLD).append(Component.literal(i + "").withStyle(ChatFormatting.WHITE)));
                 guiGraphics.renderTooltip(Minecraft.getInstance().font, componentList, Optional.empty(), mouseX - guiX, mouseY - guiY);
@@ -170,5 +176,21 @@ public class ChemicalDrawerInfoGuiAddon extends BasicScreenAddon {
     @Override
     public int getYSize() {
         return 0;
+    }
+    
+    /**
+     * Adds radioactive information to tooltip if applicable
+     */
+    private void addRadioactiveInformation(List<Component> tooltip, ChemicalStack stack) {
+        if (!FunctionalStorage.MEKANISM_LOADED || stack.isEmpty()) {
+            return;
+        }
+        
+        // Check if handler is in radioactive mode
+        BigChemicalHandler handler = chemicalHandlerSupplier.get();
+        if (handler != null && handler.isRadioactiveMode()) {
+            tooltip.add(Component.literal(""));
+            tooltip.add(Component.translatable("gui.radioactive.mode").withStyle(ChatFormatting.YELLOW));
+        }
     }
 }

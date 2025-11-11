@@ -28,6 +28,7 @@ import com.buuz135.functionalstorage.item.FSAttachments;
 import com.buuz135.functionalstorage.item.LinkingToolItem;
 import com.buuz135.functionalstorage.item.StorageUpgradeItem;
 import com.buuz135.functionalstorage.item.UpgradeItem;
+import com.buuz135.functionalstorage.item.RadioactiveUpgradeItem;
 import com.buuz135.functionalstorage.item.functional_upgrade.DrippingFunctionalUpgradeItem;
 import com.buuz135.functionalstorage.item.functional_upgrade.ObsidianGeneratorFunctionalUpgrade;
 import com.buuz135.functionalstorage.item.functional_upgrade.WaterGeneratorFunctionalUpgrade;
@@ -167,6 +168,9 @@ public class FunctionalStorage extends ModuleController {
     public static DeferredHolder<Item, Item> REDSTONE_UPGRADE;
     public static DeferredHolder<Item, Item> CREATIVE_UPGRADE;
     public static DeferredHolder<Item, Item> OBSIDIAN_UPGRADE;
+    
+    // Radioactive upgrade (only when Mekanism is loaded)
+    public static DeferredHolder<Item, Item> RADIOACTIVE_UPGRADE;
 
     public static DeferredHolder<Item, Item> DRIPPING_UPGRADE;
     public static DeferredHolder<Item, Item> WATER_GENERATOR_UPGRADE;
@@ -295,6 +299,11 @@ public class FunctionalStorage extends ModuleController {
         PULLING_UPGRADE = getRegistries().registerGeneric(Registries.ITEM, "puller_upgrade", () -> new UpgradeItem(new Item.Properties(), UpgradeItem.Type.UTILITY));
         PUSHING_UPGRADE = getRegistries().registerGeneric(Registries.ITEM, "pusher_upgrade", () -> new UpgradeItem(new Item.Properties(), UpgradeItem.Type.UTILITY));
         VOID_UPGRADE = getRegistries().registerGeneric(Registries.ITEM, "void_upgrade", () -> new UpgradeItem(new Item.Properties(), UpgradeItem.Type.UTILITY));
+        
+        // Radioactive upgrade (conditional on Mekanism)
+        if (MEKANISM_LOADED) {
+            RADIOACTIVE_UPGRADE = getRegistries().registerGeneric(Registries.ITEM, "radioactive_upgrade", () -> new RadioactiveUpgradeItem(new Item.Properties()));
+        }
         ARMORY_CABINET = getRegistries().registerBlockWithTile("armory_cabinet", ArmoryCabinetBlock::new, TAB);
         ENDER_DRAWER = getRegistries().registerBlockWithTile("ender_drawer", EnderDrawerBlock::new, TAB);
         REDSTONE_UPGRADE = getRegistries().registerGeneric(Registries.ITEM, "redstone_upgrade", () -> new UpgradeItem(new Item.Properties(), UpgradeItem.Type.UTILITY));

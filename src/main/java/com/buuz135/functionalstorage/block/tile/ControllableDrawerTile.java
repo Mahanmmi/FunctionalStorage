@@ -49,6 +49,8 @@ public abstract class ControllableDrawerTile<T extends ControllableDrawerTile<T>
     @Save
     private boolean isVoid = false;
     @Save
+    private boolean isRadioactive = false;
+    @Save
     private boolean isStorageUpgradeLocked = false;
     @Save
     private int mult = 1;
@@ -172,6 +174,12 @@ public abstract class ControllableDrawerTile<T extends ControllableDrawerTile<T>
         return isVoid;
     }
 
+    public boolean isRadioactive() {
+        if (!FunctionalStorage.MEKANISM_LOADED) return false;
+        maybeCacheUpgrades();
+        return isRadioactive;
+    }
+
     public boolean isCreative() {
         maybeCacheUpgrades();
         return isCreative;
@@ -275,10 +283,15 @@ public abstract class ControllableDrawerTile<T extends ControllableDrawerTile<T>
                 }
             }
             isVoid = false;
+            isRadioactive = false;
             if (getUtilitySlotAmount() > 0){
                 for (int i = 0; i < utilityUpgrades.getSlots(); i++) {
                     if (utilityUpgrades.getStackInSlot(i).getItem().equals(FunctionalStorage.VOID_UPGRADE.get())) {
                         isVoid = true;
+                    }
+                    if (FunctionalStorage.MEKANISM_LOADED && 
+                        utilityUpgrades.getStackInSlot(i).getItem().equals(FunctionalStorage.RADIOACTIVE_UPGRADE.get())) {
+                        isRadioactive = true;
                     }
                 }
             }

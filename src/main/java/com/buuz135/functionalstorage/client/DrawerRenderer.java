@@ -65,6 +65,17 @@ public class DrawerRenderer extends BaseDrawerRenderer<DrawerTile> {
             Minecraft.getInstance().getItemRenderer().renderStatic(new ItemStack(FunctionalStorage.VOID_UPGRADE.get()), ItemDisplayContext.NONE, combinedLightIn, combinedOverlayIn, matrixStack, bufferIn, tile.getLevel(),0);
             matrixStack.popPose();
         }
+        
+        // Radioactive upgrade rendering (always-on like void upgrade)
+        if (FunctionalStorage.MEKANISM_LOADED && tile.isRadioactive()){
+            matrixStack.pushPose();
+            // Position radioactive upgrade icon to the left of void upgrade if both present
+            float xOffset = tile.isVoid() ? 0.969f - scale : 0.969f;
+            matrixStack.mulPose(createTransformMatrix(
+                    new Vector3f(xOffset, 0.031f, 0.469f/16.0f), new Vector3f(0), scale));
+            Minecraft.getInstance().getItemRenderer().renderStatic(new ItemStack(FunctionalStorage.RADIOACTIVE_UPGRADE.get()), ItemDisplayContext.NONE, combinedLightIn, combinedOverlayIn, matrixStack, bufferIn, tile.getLevel(),0);
+            matrixStack.popPose();
+        }
     }
 
     public static void renderIndicator(PoseStack matrixStack, MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn, float progress, ControllableDrawerTile.DrawerOptions options) {

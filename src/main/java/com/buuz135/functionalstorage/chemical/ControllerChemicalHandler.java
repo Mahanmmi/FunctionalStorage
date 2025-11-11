@@ -1,5 +1,6 @@
 package com.buuz135.functionalstorage.chemical;
 
+import com.buuz135.functionalstorage.block.tile.ChemicalDrawerTile;
 import com.buuz135.functionalstorage.inventory.ControllerInventoryHandler;
 import com.buuz135.functionalstorage.util.ConnectedDrawers;
 import mekanism.api.Action;
@@ -9,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class ControllerChemicalHandler implements IChemicalHandler {
 
@@ -80,19 +82,22 @@ public abstract class ControllerChemicalHandler implements IChemicalHandler {
         return null != selector ? selector.extractChemical(amount, action) : ChemicalStack.EMPTY;
     }
 
-    // Mirror ControllerFluidHandler.fill() method exactly
+    // Mirror ControllerFluidHandler.fill() method exactly  
+    // Note: Radioactive compatibility is enforced at the BigChemicalHandler level
     @Override
     public @NotNull ChemicalStack insertChemical(@NotNull ChemicalStack resource, @NotNull Action action) {
         // Priority 1: Non-empty tanks with matching chemical
         for (HandlerTankSelector selector : this.selectors) {
-            if (!selector.getStackInSlot().isEmpty() && ChemicalStack.isSameChemical(selector.getStackInSlot(), resource) && selector.insertChemical(resource, Action.SIMULATE).getAmount() < resource.getAmount()) {
+            if (!selector.getStackInSlot().isEmpty() && ChemicalStack.isSameChemical(selector.getStackInSlot(), resource) && 
+                selector.insertChemical(resource, Action.SIMULATE).getAmount() < resource.getAmount()) {
                 return selector.insertChemical(resource, action);
             }
         }
         
         // Priority 2: Empty tanks
         for (HandlerTankSelector selector : this.selectors) {
-            if (selector.getStackInSlot().isEmpty() && selector.insertChemical(resource, Action.SIMULATE).getAmount() < resource.getAmount()) {
+            if (selector.getStackInSlot().isEmpty() && 
+                selector.insertChemical(resource, Action.SIMULATE).getAmount() < resource.getAmount()) {
                 return selector.insertChemical(resource, action);
             }
         }

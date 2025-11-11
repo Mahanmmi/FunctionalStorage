@@ -148,6 +148,8 @@ public class UpgradeItem extends BasicItem {
             return Component.translatable("drawer_upgrade.functionalstorage.redstone", Component.literal(
                     String.valueOf(stack.getOrDefault(FSAttachments.SLOT, 0))
             ).withStyle(ChatFormatting.RED));
+        } else if (FunctionalStorage.MEKANISM_LOADED && this == FunctionalStorage.RADIOACTIVE_UPGRADE.get()) {
+            return Component.translatable("drawer_upgrade.functionalstorage.radioactive");
         }
         return null;
     }

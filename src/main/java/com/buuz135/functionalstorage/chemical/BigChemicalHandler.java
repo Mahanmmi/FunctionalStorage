@@ -1,12 +1,13 @@
 package com.buuz135.functionalstorage.chemical;
 
+import com.buuz135.functionalstorage.FunctionalStorage;
 import com.buuz135.functionalstorage.util.Utils;
 import mekanism.api.Action;
 import mekanism.api.AutomationType;
 import mekanism.api.chemical.ChemicalStack;
 import mekanism.api.chemical.IChemicalHandler;
 import mekanism.api.chemical.IChemicalTank;
-import mekanism.api.chemical.attribute.ChemicalAttributeValidator;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.resources.RegistryOps;
@@ -25,6 +26,14 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
     private CustomChemicalTank[] tanks;
     private ChemicalStack[] filterStack;
     private long capacity;
+    
+    // Radioactive mode state tracking
+    private boolean radioactiveMode = false;
+    
+    // Reference to tile for radioactive upgrade checking
+    protected com.buuz135.functionalstorage.block.tile.ControllableDrawerTile<?> tile;
+    
+
 
     public BigChemicalHandler(int size, long capacity) {
         this.tanks = new CustomChemicalTank[size];
@@ -44,14 +53,7 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
 
     protected boolean isValidChemical(ChemicalStack stack) {
         if (stack.isEmpty()) return false;
-        
-        // Stage 1: Block radioactive chemicals
-        if (stack.isRadioactive()) {
-            return false;
-        }
-        
-        // Use Mekanism's validator for other checks
-        return ChemicalAttributeValidator.DEFAULT.process(stack);
+        return isChemicalCompatible(stack);
     }
 
     public CustomChemicalTank[] getTankList() {
@@ -75,7 +77,7 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
 
     @Override
     public long getChemicalTankCapacity(int tank) {
-        return this.tanks[tank].getCapacity();
+        return this.capacity;
     }
 
     @Override
@@ -99,6 +101,19 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
 
     @Override
     public @NotNull ChemicalStack insertChemical(@NotNull ChemicalStack stack, @NotNull Action action) {
+        if (stack.isEmpty()) return ChemicalStack.EMPTY;
+        
+        // Update radioactive mode before validation
+        updateRadioactiveMode();
+        
+        // Validate chemical compatibility with current drawer mode
+        if (!isChemicalCompatible(stack)) {
+            // Complete rejection for incompatible chemicals
+            return stack;
+        }
+        
+        // Note: No chemical mixing validation needed - upgrade validation prevents mixing
+        
         // Try existing tanks first - use same pattern as BigFluidHandler.fill()
         for (CustomChemicalTank tank : tanks) {
             if (!tank.getStack().isEmpty() && tank.insert(stack, Action.SIMULATE, AutomationType.EXTERNAL).getAmount() < stack.getAmount()) {
@@ -122,6 +137,8 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
 
     @Override
     public @NotNull ChemicalStack extractChemical(long amount, @NotNull Action action) {
+        // No special handling needed for extraction
+        
         for (CustomChemicalTank tank : tanks) {
             if (!tank.getStack().isEmpty()) {
                 ChemicalStack result = tank.extract(amount, action, AutomationType.EXTERNAL);
@@ -165,6 +182,10 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
             compoundTag.put("Locked" + i, ChemicalStack.OPTIONAL_CODEC.encodeStart(RegistryOps.create(NbtOps.INSTANCE, provider), this.filterStack[i]).getOrThrow());
         }
         compoundTag.putLong("Capacity", this.capacity);
+        
+        // Save radioactive mode state
+        compoundTag.putBoolean("RadioactiveMode", radioactiveMode);
+        
         return compoundTag;
     }
 
@@ -176,6 +197,53 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
             this.tanks[i].setCapacity(this.capacity);
             this.filterStack[i] = ChemicalUtils.deserializeChemical(provider, nbt.getCompound("Locked" + i));
         }
+        
+        // Load radioactive mode state
+        if (nbt.contains("RadioactiveMode")) {
+            this.radioactiveMode = nbt.getBoolean("RadioactiveMode");
+        }
+        
+        // Validate and synchronize state after loading
+        validateAndSynchronizeAfterLoad();
+    }
+    
+    /**
+     * Validates and synchronizes the drawer state after loading from NBT.
+     * This ensures that the radioactive mode, capacity, and content are all consistent.
+     */
+    private void validateAndSynchronizeAfterLoad() {
+        // Skip if tile is not available yet (early loading phase)
+        if (tile == null) {
+            return;
+        }
+        
+        // Update radioactive mode based on current upgrade state
+        updateRadioactiveMode();
+        
+        // Validate existing content against current compatibility rules
+        validateExistingContent();
+    }
+    
+    /**
+     * Validates existing chemical content against current compatibility rules.
+     * Removes incompatible chemicals that shouldn't be in the drawer.
+     */
+    private void validateExistingContent() {
+        for (int i = 0; i < tanks.length; i++) {
+            ChemicalStack existingStack = tanks[i].getStack();
+            if (!existingStack.isEmpty() && !isChemicalCompatible(existingStack)) {
+                // Chemical is no longer compatible - remove it
+                // This can happen if upgrades were removed while the chunk was unloaded
+                tanks[i].setStack(ChemicalStack.EMPTY);
+                filterStack[i] = ChemicalStack.EMPTY;
+            }
+        }
+    }
+    
+
+    
+    public long getCapacity() {
+        return this.capacity;
     }
 
     public abstract void onChange();
@@ -185,6 +253,79 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
     public abstract boolean isDrawerVoid();
 
     public abstract boolean isDrawerCreative();
+
+    /**
+     * Checks if the drawer has radioactive upgrade installed
+     */
+    private boolean hasRadioactiveUpgrade() {
+        if (!FunctionalStorage.MEKANISM_LOADED) return false;
+        if (tile == null) return false;
+        
+        // Use the cached method from ControllableDrawerTile
+        return tile.isRadioactive();
+    }
+    
+    /**
+     * Updates radioactive mode based on upgrade presence
+     */
+    public void updateRadioactiveMode() {
+        // Skip update if tile or level is not available yet
+        if (tile == null || tile.getLevel() == null) {
+            return;
+        }
+        
+        boolean newMode = hasRadioactiveUpgrade();
+        if (this.radioactiveMode != newMode) {
+            this.radioactiveMode = newMode;
+            onChange();
+        }
+    }
+    
+    /**
+     * Validates if a chemical is compatible with current drawer mode
+     */
+    private boolean isChemicalCompatible(ChemicalStack stack) {
+        if (stack.isEmpty()) return true;
+        
+        // Use direct isRadioactive() method instead of validator
+        boolean isRadioactive = stack.isRadioactive();
+        boolean hasUpgrade = hasRadioactiveUpgrade();
+        
+        // Radioactive chemicals require radioactive upgrade
+        if (isRadioactive && !hasUpgrade) {
+            return false;
+        }
+        
+        // Non-radioactive chemicals incompatible with radioactive mode
+        if (!isRadioactive && hasUpgrade) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Gets the current radioactive mode status
+     */
+    public boolean isRadioactiveMode() {
+        updateRadioactiveMode();
+        return radioactiveMode;
+    }
+    
+    /**
+     * Sets the tile reference for radioactive upgrade checking
+     */
+    public void setTile(com.buuz135.functionalstorage.block.tile.ControllableDrawerTile<?> tile) {
+        this.tile = tile;
+        
+        // Validate and synchronize state if we have content loaded from NBT
+        // This handles cases where tile wasn't available during deserialization
+        if (tile != null) {
+            validateAndSynchronizeAfterLoad();
+        }
+    }
+    
+
 
     public void lockHandler() {
         for (int i = 0; i < this.tanks.length; i++) {

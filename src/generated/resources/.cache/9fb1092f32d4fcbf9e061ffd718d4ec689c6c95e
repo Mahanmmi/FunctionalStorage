@@ -1,4 +1,4 @@
-// 1.21.1	2025-11-04T21:51:46.404086134	Recipes
+// 1.21.1	2025-11-08T13:51:27.823688896	Recipes
 f07485f3ee5257c2b12fcf149c60ddd20ed73fe1 data/functionalstorage/advancement/recipes/misc/acacia_1.json
 8cce3aada48266b5e41df6e04b01ab1fd2224a4c data/functionalstorage/advancement/recipes/misc/acacia_2.json
 8bc6f134a188d7ec701a472feeb93bccc9a115f3 data/functionalstorage/advancement/recipes/misc/acacia_4.json
@@ -60,6 +60,7 @@ c80f7e9dd1b842064a6022ca70252e014bcbe78d data/functionalstorage/advancement/reci
 03916d94e0951dc15378cff9720a3911b9aeca21 data/functionalstorage/advancement/recipes/misc/obsidian_upgrade.json
 6ff3017bd51bb87d785d65a23659e9e94205e0ec data/functionalstorage/advancement/recipes/misc/puller_upgrade.json
 d9c6f6b3bd529a8f95e58142803ea6bb0dd3972e data/functionalstorage/advancement/recipes/misc/pusher_upgrade.json
+8b9911ce554821d42b0425be0bda4ea85a7b43cf data/functionalstorage/advancement/recipes/misc/radioactive_upgrade.json
 2c2a6f2849c070210a0a6f8d5c311b30b20203da data/functionalstorage/advancement/recipes/misc/redstone_upgrade.json
 47310c768d3dedd3ba4d36d482ea080f11300a4b data/functionalstorage/advancement/recipes/misc/simple_compacting_drawer.json
 7d2e55897afc7c855c4c7628458704b6c10f4d91 data/functionalstorage/advancement/recipes/misc/spruce_1.json
@@ -138,6 +139,7 @@ d048d2588452bf51bd73f777282a27905f27fe4c data/functionalstorage/recipe/linking_t
 2c2629ef34b13d1cf452fbaacb9ccb588867cbf0 data/functionalstorage/recipe/obsidian_upgrade.json
 a7ec2fd7e409c9fe329a972f8caf8a2f74e31e9e data/functionalstorage/recipe/puller_upgrade.json
 0f54ff3aa2caa38c35c467783e2c6c7a449c6785 data/functionalstorage/recipe/pusher_upgrade.json
+27f2e0dea13ce2d26c94ca12f79c9e558062c04a data/functionalstorage/recipe/radioactive_upgrade.json
 7cf0ad077a5a1872fdd04c5b3218b8d71a6e90d8 data/functionalstorage/recipe/redstone_upgrade.json
 a6d66aa0d1ffc4d10f6f695573708948ec0c077b data/functionalstorage/recipe/simple_compacting_drawer.json
 0b8fa429a17312ccdc2c90a4dc4ba5dd44ab06c9 data/functionalstorage/recipe/spruce_1.json

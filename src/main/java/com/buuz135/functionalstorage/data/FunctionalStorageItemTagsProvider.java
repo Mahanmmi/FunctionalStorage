@@ -31,6 +31,14 @@ public class FunctionalStorageItemTagsProvider extends ItemTagsProvider {
             FunctionalStorage.DRAWER_TYPES.get(drawerType).stream().map(BlockWithTile::block)
                     .forEach(ho -> byTypeAppender.add(ho.get().asItem()));
         }
+        
+        // Add chemical drawer tag (conditional on Mekanism)
+        if (FunctionalStorage.MEKANISM_LOADED) {
+            tag(StorageTags.CHEMICAL_DRAWER)
+                .add(FunctionalStorage.CHEMICAL_DRAWER_1.getBlock().asItem())
+                .add(FunctionalStorage.CHEMICAL_DRAWER_2.getBlock().asItem())
+                .add(FunctionalStorage.CHEMICAL_DRAWER_4.getBlock().asItem());
+        }
     }
 
     @Override

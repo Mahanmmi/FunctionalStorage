@@ -76,6 +76,43 @@ public class FunctionalStorageLangProvider extends LanguageProvider {
         this.add(FunctionalStorage.VOID_UPGRADE.get(), WordUtils.capitalize(BuiltInRegistries.ITEM.getKey(FunctionalStorage.VOID_UPGRADE.get()).getPath().replace('_', ' ').toLowerCase()));
         this.add(FunctionalStorage.REDSTONE_UPGRADE.get(), WordUtils.capitalize(BuiltInRegistries.ITEM.getKey(FunctionalStorage.REDSTONE_UPGRADE.get()).getPath().replace('_', ' ').toLowerCase()));
         this.add(FunctionalStorage.CREATIVE_UPGRADE.get(), WordUtils.capitalize(BuiltInRegistries.ITEM.getKey(FunctionalStorage.CREATIVE_UPGRADE.get()).getPath().replace('_', ' ').toLowerCase()));
+        
+        // Radioactive upgrade localization (conditional on Mekanism)
+        if (FunctionalStorage.MEKANISM_LOADED) {
+            add(FunctionalStorage.RADIOACTIVE_UPGRADE.get(), "Radioactive Upgrade");
+            
+            // Tooltip translations
+            add("upgrade.radioactive.warning", "⚠ RADIOACTIVE UPGRADE ⚠");
+            add("upgrade.radioactive.chemical_only", "Only accepts radioactive chemicals");
+            add("upgrade.radioactive.capacity_reduction", "Reduces capacity by 32x");
+            add("upgrade.radioactive.storage_info", "Stores radioactive chemicals only");
+            add("upgrade.radioactive.safety", "Prevents contamination of regular drawers");
+            
+            // Error messages
+            add("upgrade.radioactive.install_error", "Cannot install: Non-radioactive chemicals present");
+            add("upgrade.radioactive.remove_error", "Cannot remove: Radioactive chemicals present");
+            
+            // Chemical insertion error messages
+            add("drawer.chemical.radioactive_requires_upgrade", "Radioactive chemicals require radioactive upgrade");
+            add("drawer.chemical.radioactive_mode_only", "Radioactive mode only accepts radioactive chemicals");
+            
+            // Capacity tooltip translations
+            add("tooltip.capacity.current", "Capacity: %s mB");
+            add("tooltip.capacity.reduced", "⚠ Capacity Reduced");
+            add("tooltip.capacity.base", "Base Capacity: %s mB");
+            add("tooltip.capacity.factor", "Reduction Factor: %sx");
+            
+            // GUI radioactive mode translations
+            add("gui.radioactive.mode", "RADIOACTIVE MODE");
+            add("gui.radioactive.capacity_reduced", "Capacity reduced by %sx");
+            
+            // Radioactive chemical tooltip translations
+            add("tooltip.radioactive.chemical", "☢ RADIOACTIVE CHEMICAL");
+            add("tooltip.radioactive.storage_mode", "Stored in radioactive mode");
+            
+            // Radioactive upgrade description for Jade tooltips
+            add("drawer_upgrade.functionalstorage.radioactive", "Enables radioactive chemical storage");
+        }
         this.add(FunctionalStorage.ARMORY_CABINET.getBlock(), "Armory Cabinet");
         this.add(FunctionalStorage.CONFIGURATION_TOOL.get(), "Configuration Tool");
         this.add(FunctionalStorage.DRIPPING_UPGRADE.get(), WordUtils.capitalize(BuiltInRegistries.ITEM.getKey(FunctionalStorage.DRIPPING_UPGRADE.get()).getPath().replace('_', ' ').toLowerCase()));
@@ -147,6 +184,7 @@ public class FunctionalStorageLangProvider extends LanguageProvider {
         this.add("drawer.block.upgrades", "Upgrades:");
         this.add("drawer.block.upgrades.is_creative", "Creative");
         this.add("drawer.block.upgrades.is_void", "Void");
+        this.add("drawer.block.upgrades.is_radioactive", "Radioactive");
         this.add("drawer.block.upgrades.none", "None");
     }
 }

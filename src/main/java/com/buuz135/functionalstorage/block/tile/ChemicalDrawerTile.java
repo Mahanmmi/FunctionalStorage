@@ -12,6 +12,8 @@ import com.hrznstudio.titanium.block.BasicTileBlock;
 import com.hrznstudio.titanium.component.inventory.InventoryComponent;
 import mekanism.api.Action;
 import mekanism.api.AutomationType;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import mekanism.api.chemical.ChemicalStack;
 import mekanism.api.chemical.IChemicalHandler;
 
@@ -55,7 +57,7 @@ public class ChemicalDrawerTile extends ControllableDrawerTile<ChemicalDrawerTil
             
             @Override
             public long getChemicalTankCapacity(int tank) {
-                return isDrawerCreative() ? Long.MAX_VALUE : super.getChemicalTankCapacity(tank);
+                return isDrawerCreative() ? Long.MAX_VALUE : chemicalHandler.getCapacity();
             }
             
             @Override
@@ -78,6 +80,9 @@ public class ChemicalDrawerTile extends ControllableDrawerTile<ChemicalDrawerTil
                 return isCreative();
             }
         };
+        
+        // Set tile reference for radioactive upgrade checking
+        this.chemicalHandler.setTile(this);
     }
 
     private long getTankCapacity(int storageMultiplier) {
@@ -108,7 +113,6 @@ public class ChemicalDrawerTile extends ControllableDrawerTile<ChemicalDrawerTil
 
     @Override
     public double getStorageDiv() {
-        // Use same divisor as fluids for now - can be made configurable later
         return FunctionalStorageConfig.FLUID_DIVISOR;
     }
 
@@ -174,6 +178,96 @@ public class ChemicalDrawerTile extends ControllableDrawerTile<ChemicalDrawerTil
     public FunctionalStorage.DrawerType getDrawerType() {
         return type;
     }
+
+    /**
+     * Checks if the chemical drawer has a radioactive upgrade installed
+     */
+    public boolean hasRadioactiveUpgrade() {
+        return isRadioactive(); // Delegate to parent class method
+    }
+
+    /**
+     * Gets the radioactive upgrade stack if present
+     */
+    public ItemStack getRadioactiveUpgrade() {
+        if (!hasRadioactiveUpgrade()) return ItemStack.EMPTY;
+        
+        if (getUtilitySlotAmount() > 0) {
+            for (int i = 0; i < getUtilityUpgrades().getSlots(); i++) {
+                ItemStack stack = getUtilityUpgrades().getStackInSlot(i);
+                if (!stack.isEmpty() && FunctionalStorage.MEKANISM_LOADED && 
+                    stack.getItem() == FunctionalStorage.RADIOACTIVE_UPGRADE.get()) {
+                    return stack;
+                }
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+    
+    /**
+     * Updates the chemical handler when radioactive mode changes
+     */
+    public void updateChemicalHandlerRadioactiveMode() {
+        if (chemicalHandler != null) {
+            chemicalHandler.updateRadioactiveMode();
+        }
+    }
+    
+    @Override
+    public void setNeedsUpgradeCache(boolean needsUpgradeCache) {
+        super.setNeedsUpgradeCache(needsUpgradeCache);
+        
+        // Update chemical handler radioactive mode when upgrade cache changes
+        if (needsUpgradeCache) {
+            // Update immediately since upgrade cache will be updated on next access
+            updateChemicalHandlerRadioactiveMode();
+        }
+    }
+    
+    /**
+     * Validates if a chemical can be inserted (used by automation)
+     */
+    public boolean canInsertChemical(ChemicalStack stack) {
+        if (chemicalHandler == null) return false;
+        
+        // Test insertion without actually inserting
+        ChemicalStack remainder = chemicalHandler.insertChemical(stack, Action.SIMULATE);
+        
+        // Can insert if some amount would be accepted
+        return remainder.getAmount() < stack.getAmount();
+    }
+    
+    /**
+     * Gets validation error message for chemical insertion
+     */
+    public Component getChemicalInsertionError(ChemicalStack stack) {
+        if (stack.isEmpty()) return Component.empty();
+        
+        // Use direct isRadioactive() method
+        boolean isRadioactive = stack.isRadioactive();
+        boolean hasUpgrade = hasRadioactiveUpgrade();
+        
+        if (isRadioactive && !hasUpgrade) {
+            return Component.translatable("drawer.chemical.radioactive_requires_upgrade")
+                .withStyle(ChatFormatting.RED);
+        }
+        
+        if (!isRadioactive && hasUpgrade) {
+            return Component.translatable("drawer.chemical.radioactive_mode_only")
+                .withStyle(ChatFormatting.YELLOW);
+        }
+        
+        return Component.empty();
+    }
+    
+    /**
+     * Gets the current capacity of the chemical storage
+     */
+    public long getCurrentCapacity() {
+        return chemicalHandler != null ? chemicalHandler.getCapacity() : 0L;
+    }
+
+
 
     @Override
     public void setLocked(boolean locked) {

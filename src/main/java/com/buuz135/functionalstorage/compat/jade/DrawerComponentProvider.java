@@ -2,6 +2,7 @@ package com.buuz135.functionalstorage.compat.jade;
 
 import com.buuz135.functionalstorage.FunctionalStorage;
 import com.buuz135.functionalstorage.block.EnderDrawerBlock;
+import com.buuz135.functionalstorage.block.tile.ChemicalDrawerTile;
 import com.buuz135.functionalstorage.block.tile.ControllableDrawerTile;
 import com.buuz135.functionalstorage.block.tile.EnderDrawerTile;
 import com.buuz135.functionalstorage.block.tile.FluidDrawerTile;
@@ -112,6 +113,33 @@ public enum DrawerComponentProvider implements IBlockComponentProvider {
                             var view = new FluidView(helper.fluid(JadeFluidObject.of(stack.getFirst().getFluid())));
                             ProgressStyle progressStyle = helper.progressStyle().overlay(view.overlay);
                             contentsBox.add(helper.progress((float) stack.getFirst().getAmount() / stack.getSecond(), Component.empty().append(stack.getFirst().getHoverName()).append(Component.literal(" x ").append(NumberUtils.getFormatedFluidBigNumber(stack.getFirst().getAmount()) + " / " + NumberUtils.getFormatedFluidBigNumber(stack.getSecond()))), progressStyle, BoxStyle.getNestedBox(), true));
+                        }
+                        iTooltip.add(helper.box(contentsBox, BoxStyle.getNestedBox()));
+                    }
+                }
+            } else if (FunctionalStorage.MEKANISM_LOADED && blockAccessor.getBlockEntity() instanceof ChemicalDrawerTile tile) {
+                if (!tile.isInventoryEmpty()) {
+                    var stacks = new ArrayList<Pair<mekanism.api.chemical.ChemicalStack, Long>>();
+                    for (int slot = 0; slot < tile.getChemicalHandler().getChemicalTanks(); slot++) {
+                        var stack = tile.getChemicalHandler().getChemicalInTank(slot);
+                        if (!stack.isEmpty()) {
+                            stacks.add(new Pair<>(stack, tile.getChemicalHandler().getChemicalTankCapacity(slot)));
+                        }
+                    }
+
+                    if (!stacks.isEmpty()) {
+                        var contentsBox = helper.tooltip();
+                        iTooltip.add(helper.text(Component.translatable("drawer.block.contents")));
+                        for (var stack : stacks) {
+                            // Create chemical display using Mekanism's chemical color
+                            int chemicalColor = stack.getFirst().getChemicalTint();
+                            Component chemicalName = stack.getFirst().getChemical().getTextComponent();
+                            Component displayText = Component.empty()
+                                .append(chemicalName.copy().withStyle(style -> style.withColor(chemicalColor)))
+                                .append(Component.literal(" x "))
+                                .append(NumberUtils.getFormatedFluidBigNumber(stack.getFirst().getAmount()) + " / " + NumberUtils.getFormatedFluidBigNumber(stack.getSecond()));
+                            
+                            contentsBox.add(helper.text(displayText));
                         }
                         iTooltip.add(helper.box(contentsBox, BoxStyle.getNestedBox()));
                     }
