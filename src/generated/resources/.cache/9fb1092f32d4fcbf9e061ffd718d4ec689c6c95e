@@ -1,4 +1,4 @@
-// 1.21.1	2024-10-30T14:38:49.291684	Recipes
+// 1.21.1	2025-11-04T21:51:46.404086134	Recipes
 f07485f3ee5257c2b12fcf149c60ddd20ed73fe1 data/functionalstorage/advancement/recipes/misc/acacia_1.json
 8cce3aada48266b5e41df6e04b01ab1fd2224a4c data/functionalstorage/advancement/recipes/misc/acacia_2.json
 8bc6f134a188d7ec701a472feeb93bccc9a115f3 data/functionalstorage/advancement/recipes/misc/acacia_4.json
@@ -6,6 +6,9 @@ f07485f3ee5257c2b12fcf149c60ddd20ed73fe1 data/functionalstorage/advancement/reci
 7148349418a85e1f5211f02fdb50dedb98530b5c data/functionalstorage/advancement/recipes/misc/birch_1.json
 7dccbffdca9d47b36d270adcd7d4c77436aa3730 data/functionalstorage/advancement/recipes/misc/birch_2.json
 642b7744641842a7f762db59fc60f8e511cd5539 data/functionalstorage/advancement/recipes/misc/birch_4.json
+167a465f1da6b09936c14c2653739e376570f2ec data/functionalstorage/advancement/recipes/misc/chemical_1.json
+11aca5740c48391a4aac3ceff15cf41a80109e91 data/functionalstorage/advancement/recipes/misc/chemical_2.json
+90fe0b190cbbf751e284f18a947ed74a17d1298c data/functionalstorage/advancement/recipes/misc/chemical_4.json
 f1a02965cbbb75de65bf74b3def4ea4e99f19098 data/functionalstorage/advancement/recipes/misc/cherry_1.json
 84dd9c2a2ce80d0202244736248fc9afbff62a6c data/functionalstorage/advancement/recipes/misc/cherry_2.json
 1135382d815395682324be184d9731a9a249e762 data/functionalstorage/advancement/recipes/misc/cherry_4.json
@@ -75,6 +78,9 @@ a44a7f2f4eaf7543c623f5dfdbe06739365cc347 data/functionalstorage/recipe/acacia_2.
 a00048cee88ed3b56c964639f356a61293bb6feb data/functionalstorage/recipe/birch_1.json
 234cf5f9c2441a9d0541298de146a0da1e5f7e03 data/functionalstorage/recipe/birch_2.json
 90def2b50fb81317d0304a38be8ca6878857035e data/functionalstorage/recipe/birch_4.json
+ee070c11794127635a46de9445a9ebc57e275a69 data/functionalstorage/recipe/chemical_1.json
+61bbb63a2ef4242725ba4bf16d5da3216b31f966 data/functionalstorage/recipe/chemical_2.json
+46eea4f97c882800ba69f64a293d17f0d220d66f data/functionalstorage/recipe/chemical_4.json
 dd7232feb8b5861f983c3e8ab764b8451c00d86e data/functionalstorage/recipe/cherry_1.json
 7993db743da0bf8eff4d532e3b8e8a02eee3ec6a data/functionalstorage/recipe/cherry_2.json
 908796ef8c4b9ccf5c6c4c6a2c46d745785902b7 data/functionalstorage/recipe/cherry_4.json

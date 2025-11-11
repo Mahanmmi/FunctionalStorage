@@ -1,0 +1,23 @@
+{
+  "variants": {
+    "subfacing=east": {
+      "model": "functionalstorage:block/chemical_2",
+      "uvlock": true,
+      "y": 90
+    },
+    "subfacing=north": {
+      "model": "functionalstorage:block/chemical_2",
+      "uvlock": true
+    },
+    "subfacing=south": {
+      "model": "functionalstorage:block/chemical_2",
+      "uvlock": true,
+      "y": 180
+    },
+    "subfacing=west": {
+      "model": "functionalstorage:block/chemical_2",
+      "uvlock": true,
+      "y": 270
+    }
+  }
+}

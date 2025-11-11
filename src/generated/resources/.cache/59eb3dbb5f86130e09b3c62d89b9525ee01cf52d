@@ -1,4 +1,4 @@
-// 1.21.1	2024-10-30T13:30:53.1646686	Loot Tables
+// 1.21.1	2025-11-04T21:51:46.403069207	Loot Tables
 d78cf8442a9d36bff4abc1107f1217f4a4418c8e data/functionalstorage/loot_table/blocks/acacia_1.json
 47f3265cef09634f6f2d136757304488a7cf1c75 data/functionalstorage/loot_table/blocks/acacia_2.json
 769595131ba5623e061d1fada4a22af5fd00cb69 data/functionalstorage/loot_table/blocks/acacia_4.json
@@ -6,6 +6,9 @@ d78cf8442a9d36bff4abc1107f1217f4a4418c8e data/functionalstorage/loot_table/block
 4e99e8cc8aa95dc1bc422c198410deae5d205ce4 data/functionalstorage/loot_table/blocks/birch_1.json
 a4f6db831ddd292c1b19d3176a5256b36a8c51a5 data/functionalstorage/loot_table/blocks/birch_2.json
 4899a11badc269283c5946f3d64d020153022d00 data/functionalstorage/loot_table/blocks/birch_4.json
+e14098dca2a734800a73336502dc9df465e47daa data/functionalstorage/loot_table/blocks/chemical_1.json
+1ac2d73897bcc3903d27c98a3c88f0b2200fbf7f data/functionalstorage/loot_table/blocks/chemical_2.json
+5d7045ea4675d2d15191421a4f3326995598573d data/functionalstorage/loot_table/blocks/chemical_4.json
 c7221cb4ac7a7e125178c890e3c8b919d9cce062 data/functionalstorage/loot_table/blocks/cherry_1.json
 fbb515425f7c3aa6f0bab8057bed31e3d7c1172b data/functionalstorage/loot_table/blocks/cherry_2.json
 b0b462916d144cb042acb82dff15f7c161f42bbd data/functionalstorage/loot_table/blocks/cherry_4.json

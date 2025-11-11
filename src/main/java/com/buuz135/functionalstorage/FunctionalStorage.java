@@ -2,6 +2,10 @@ package com.buuz135.functionalstorage;
 
 import com.buuz135.functionalstorage.block.*;
 import com.buuz135.functionalstorage.block.tile.*;
+import com.buuz135.functionalstorage.block.ChemicalDrawerBlock;
+import com.buuz135.functionalstorage.block.tile.ChemicalDrawerTile;
+import com.buuz135.functionalstorage.chemical.ChemicalCapabilities;
+import com.buuz135.functionalstorage.client.ChemicalDrawerRenderer;
 import com.buuz135.functionalstorage.client.ClientSetup;
 import com.buuz135.functionalstorage.client.CompactingDrawerRenderer;
 import com.buuz135.functionalstorage.client.ControllerRenderer;
@@ -71,6 +75,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
@@ -113,6 +118,9 @@ public class FunctionalStorage extends ModuleController {
 
     public final static String MOD_ID = "functionalstorage";
     public static NetworkHandler NETWORK = new NetworkHandler(MOD_ID);
+    
+    // Mekanism integration detection
+    public static final boolean MEKANISM_LOADED = ModList.get().isLoaded("mekanism");
 
     static {
         NETWORK.registerMessage("ender_drawer_sync", EnderDrawerSyncMessage.class);
@@ -141,6 +149,11 @@ public class FunctionalStorage extends ModuleController {
     public static BlockWithTile FRAMED_FLUID_DRAWER_1;
     public static BlockWithTile FRAMED_FLUID_DRAWER_2;
     public static BlockWithTile FRAMED_FLUID_DRAWER_4;
+    
+    // Chemical Drawers (only when Mekanism is loaded)
+    public static BlockWithTile CHEMICAL_DRAWER_1;
+    public static BlockWithTile CHEMICAL_DRAWER_2;
+    public static BlockWithTile CHEMICAL_DRAWER_4;
 
 
     public static DeferredHolder<Item, Item> LINKING_TOOL;
@@ -179,6 +192,11 @@ public class FunctionalStorage extends ModuleController {
         NBTManager.getInstance().scanTileClassForAnnotations(FluidDrawerTile.class);
         NBTManager.getInstance().scanTileClassForAnnotations(SimpleCompactingDrawerTile.class);
         NBTManager.getInstance().scanTileClassForAnnotations(FramedSimpleCompactingDrawerTile.class);
+        
+        // Register chemical drawer tile for NBT handling only when Mekanism is loaded
+        if (MEKANISM_LOADED) {
+            NBTManager.getInstance().scanTileClassForAnnotations(ChemicalDrawerTile.class);
+        }
 
         EventManager.forge(PlayerInteractEvent.LeftClickBlock.class)
                 .process(event -> {
@@ -210,6 +228,11 @@ public class FunctionalStorage extends ModuleController {
                 }
                 return null;
             }, COMPACTING_DRAWER.asItem(), SIMPLE_COMPACTING_DRAWER.asItem(), FRAMED_COMPACTING_DRAWER.asItem(), FRAMED_SIMPLE_COMPACTING_DRAWER.asItem());
+            
+            // Register chemical capabilities only when Mekanism is loaded
+            if (MEKANISM_LOADED) {
+                registerChemicalCapabilities(event);
+            }
         });
     }
 
@@ -242,6 +265,10 @@ public class FunctionalStorage extends ModuleController {
                 blockRegistryObject -> () -> new FluidDrawerBlock.FluidDrawerItem((FluidDrawerBlock) blockRegistryObject.get(), new Item.Properties(), TAB),TAB);
         FRAMED_FLUID_DRAWER_4 = getRegistries().registerBlockWithTileItem("framed_fluid_4", () -> new FramedFluidDrawerBlock(DrawerType.X_4, BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS)),
                 blockRegistryObject -> () -> new FluidDrawerBlock.FluidDrawerItem((FluidDrawerBlock) blockRegistryObject.get(), new Item.Properties(), TAB),TAB);
+        
+        // Register chemical drawers only if Mekanism is loaded
+        registerChemicalDrawers();
+        
         COMPACTING_DRAWER = getRegistries().registerBlockWithTileItem("compacting_drawer", () -> new CompactingDrawerBlock("compacting_drawer", BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS)),
                 blockRegistryObject -> () ->
                         new CompactingDrawerBlock.CompactingDrawerItem(blockRegistryObject.get(), new Item.Properties(), 3), TAB);
@@ -317,6 +344,38 @@ public class FunctionalStorage extends ModuleController {
                 });
     }
 
+    /**
+     * Registers chemical drawer blocks and items only if Mekanism is loaded.
+     * This prevents crashes when Mekanism is not present.
+     */
+    private void registerChemicalDrawers() {
+        if (MEKANISM_LOADED) {
+            CHEMICAL_DRAWER_1 = getRegistries().registerBlockWithTileItem("chemical_1", 
+                () -> new ChemicalDrawerBlock(DrawerType.X_1, net.minecraft.world.level.block.Block.Properties.ofFullCopy(net.minecraft.world.level.block.Blocks.STONE_BRICKS)),
+                blockRegistryObject -> () -> new ChemicalDrawerBlock.ChemicalDrawerItem((ChemicalDrawerBlock) blockRegistryObject.get(), new Item.Properties(), TAB), TAB);
+            CHEMICAL_DRAWER_2 = getRegistries().registerBlockWithTileItem("chemical_2", 
+                () -> new ChemicalDrawerBlock(DrawerType.X_2, net.minecraft.world.level.block.Block.Properties.ofFullCopy(net.minecraft.world.level.block.Blocks.STONE_BRICKS)),
+                blockRegistryObject -> () -> new ChemicalDrawerBlock.ChemicalDrawerItem((ChemicalDrawerBlock) blockRegistryObject.get(), new Item.Properties(), TAB), TAB);
+            CHEMICAL_DRAWER_4 = getRegistries().registerBlockWithTileItem("chemical_4", 
+                () -> new ChemicalDrawerBlock(DrawerType.X_4, net.minecraft.world.level.block.Block.Properties.ofFullCopy(net.minecraft.world.level.block.Blocks.STONE_BRICKS)),
+                blockRegistryObject -> () -> new ChemicalDrawerBlock.ChemicalDrawerItem((ChemicalDrawerBlock) blockRegistryObject.get(), new Item.Properties(), TAB), TAB);
+        }
+    }
+
+    /**
+     * Registers chemical capabilities for chemical drawer blocks only.
+     * Follows the same semantic pattern as fluid drawers (no item capability registration).
+     */
+    private void registerChemicalCapabilities(RegisterCapabilitiesEvent event) {
+        // Register block chemical capabilities (matching FluidDrawer pattern - no item capabilities)
+        event.registerBlock(ChemicalCapabilities.CHEMICAL.block(), (level, pos, state, blockEntity, side) -> {
+            if (blockEntity instanceof ChemicalDrawerTile tile) {
+                return tile.getChemicalHandler(side);
+            }
+            return null;
+        }, CHEMICAL_DRAWER_1.getBlock(), CHEMICAL_DRAWER_2.getBlock(), CHEMICAL_DRAWER_4.getBlock());
+    }
+
     public enum DrawerType {
         X_1(1, 32 * 64, "1x1", integer -> Pair.of(16, 16)),
         X_2(2, 16 * 64, "1x2", integer -> {
@@ -383,6 +442,14 @@ public class FunctionalStorage extends ModuleController {
             registerRenderers.registerBlockEntityRenderer((BlockEntityType<? extends FluidDrawerTile>) FRAMED_FLUID_DRAWER_1.type().get(), p_173571_ -> new FluidDrawerRenderer());
             registerRenderers.registerBlockEntityRenderer((BlockEntityType<? extends FluidDrawerTile>) FRAMED_FLUID_DRAWER_2.type().get(), p_173571_ -> new FluidDrawerRenderer());
             registerRenderers.registerBlockEntityRenderer((BlockEntityType<? extends FluidDrawerTile>) FRAMED_FLUID_DRAWER_4.type().get(), p_173571_ -> new FluidDrawerRenderer());
+            
+            // Register chemical drawer renderers only when Mekanism is loaded
+            if (MEKANISM_LOADED) {
+                registerRenderers.registerBlockEntityRenderer((BlockEntityType<? extends ChemicalDrawerTile>) CHEMICAL_DRAWER_1.type().get(), p_173571_ -> new ChemicalDrawerRenderer());
+                registerRenderers.registerBlockEntityRenderer((BlockEntityType<? extends ChemicalDrawerTile>) CHEMICAL_DRAWER_2.type().get(), p_173571_ -> new ChemicalDrawerRenderer());
+                registerRenderers.registerBlockEntityRenderer((BlockEntityType<? extends ChemicalDrawerTile>) CHEMICAL_DRAWER_4.type().get(), p_173571_ -> new ChemicalDrawerRenderer());
+            }
+            
             registerRenderers.registerBlockEntityRenderer((BlockEntityType<? extends SimpleCompactingDrawerTile>) SIMPLE_COMPACTING_DRAWER.type().get(), p_173571_ -> new SimpleCompactingDrawerRenderer());
 
             registerRenderers.registerBlockEntityRenderer((BlockEntityType<? extends FramedDrawerControllerTile>) FRAMED_DRAWER_CONTROLLER.type().get(), p -> new ControllerRenderer());
@@ -425,6 +492,14 @@ public class FunctionalStorage extends ModuleController {
             ItemBlockRenderTypes.setRenderLayer(FLUID_DRAWER_1.getBlock(), RenderType.cutout());
             ItemBlockRenderTypes.setRenderLayer(FLUID_DRAWER_2.getBlock(), RenderType.cutout());
             ItemBlockRenderTypes.setRenderLayer(FLUID_DRAWER_4.getBlock(), RenderType.cutout());
+            
+            // Set render layer for chemical drawers only when Mekanism is loaded
+            if (MEKANISM_LOADED) {
+                ItemBlockRenderTypes.setRenderLayer(CHEMICAL_DRAWER_1.getBlock(), RenderType.cutout());
+                ItemBlockRenderTypes.setRenderLayer(CHEMICAL_DRAWER_2.getBlock(), RenderType.cutout());
+                ItemBlockRenderTypes.setRenderLayer(CHEMICAL_DRAWER_4.getBlock(), RenderType.cutout());
+            }
+            
             ItemBlockRenderTypes.setRenderLayer(SIMPLE_COMPACTING_DRAWER.getBlock(), RenderType.cutout());
 
             ItemBlockRenderTypes.setRenderLayer(FRAMED_DRAWER_CONTROLLER.getBlock(), RenderType.cutout());
@@ -495,7 +570,7 @@ public class FunctionalStorage extends ModuleController {
                 @Override
                 protected void registerModels() {
                     blocksToProcess.get().forEach(block -> {
-                        if ((block instanceof DrawerBlock) || (block instanceof CompactingDrawerBlock) || (block instanceof SimpleCompactingDrawerBlock) || (block instanceof FluidDrawerBlock)){
+                        if ((block instanceof DrawerBlock) || (block instanceof CompactingDrawerBlock) || (block instanceof SimpleCompactingDrawerBlock) || (block instanceof FluidDrawerBlock) || (block instanceof ChemicalDrawerBlock)){
                             withUnchecked(BuiltInRegistries.BLOCK.getKey(block).getPath(), ResourceLocation.fromNamespaceAndPath("minecraft", "builtin/entity"));
                         } else {
                             withUnchecked(BuiltInRegistries.BLOCK.getKey(block).getPath(), ResourceLocation.fromNamespaceAndPath(FunctionalStorage.MOD_ID, "block/" + BuiltInRegistries.BLOCK.getKey(block).getPath()));
@@ -553,6 +628,17 @@ public class FunctionalStorage extends ModuleController {
                             .texture("lock_icon", modLoc("block/lock"));
                     withExistingParent(BuiltInRegistries.BLOCK.getKey(FRAMED_FLUID_DRAWER_4.getBlock()).getPath() + "_locked", modLoc(BuiltInRegistries.BLOCK.getKey(FRAMED_FLUID_DRAWER_4.getBlock()).getPath()))
                             .texture("lock_icon", modLoc("block/lock"));
+                            
+                    // Generate locked models for chemical drawers only when Mekanism is loaded
+                    if (MEKANISM_LOADED) {
+                        withExistingParent(BuiltInRegistries.BLOCK.getKey(CHEMICAL_DRAWER_1.getBlock()).getPath() + "_locked", modLoc(BuiltInRegistries.BLOCK.getKey(CHEMICAL_DRAWER_1.getBlock()).getPath()))
+                                .texture("lock_icon", modLoc("block/lock"));
+                        withExistingParent(BuiltInRegistries.BLOCK.getKey(CHEMICAL_DRAWER_2.getBlock()).getPath() + "_locked", modLoc(BuiltInRegistries.BLOCK.getKey(CHEMICAL_DRAWER_2.getBlock()).getPath()))
+                                .texture("lock_icon", modLoc("block/lock"));
+                        withExistingParent(BuiltInRegistries.BLOCK.getKey(CHEMICAL_DRAWER_4.getBlock()).getPath() + "_locked", modLoc(BuiltInRegistries.BLOCK.getKey(CHEMICAL_DRAWER_4.getBlock()).getPath()))
+                                .texture("lock_icon", modLoc("block/lock"));
+                    }
+                    
 //                    withExistingParent(BuiltInRegistries.BLOCK.getKey(FRAMED_COMPACTING_DRAWER.getBlock()).getPath() + "_locked", modLoc(BuiltInRegistries.BLOCK.getKey(FRAMED_COMPACTING_DRAWER.getBlock()).getPath()))
 //                            .texture("lock_icon", modLoc("block/lock"));
                 }

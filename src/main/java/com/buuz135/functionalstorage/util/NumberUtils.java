@@ -23,17 +23,21 @@ public class NumberUtils {
     }
 
     public static String getFormatedFluidBigNumber(int number) {
-        if (number < 1000) return String.valueOf(number) + " mB";
-        if (number >= 1000000000) { //BILLION
+        return getFormatedFluidBigNumber((long) number);
+    }
+
+    public static String getFormatedFluidBigNumber(long number) {
+        if (number < 1000L) return String.valueOf(number) + " mB";
+        if (number >= 1000000000L) { //BILLION
             float numb = number / 1000000000F;
             return formatterWithUnits.format(numb) + "M B";
-        } else if (number >= 1000000) { //MILLION
+        } else if (number >= 1000000L) { //MILLION
             float numb = number / 1000000F;
-            if (number > 100000000) numb = Math.round(numb);
+            if (number > 100000000L) numb = Math.round(numb);
             return formatterWithUnits.format(numb) + "K B";
-        } else if (number >= 1000) { //THOUSANDS
+        } else if (number >= 1000L) { //THOUSANDS
             float numb = number / 1000F;
-            if (number > 100000) numb = Math.round(numb);
+            if (number > 100000L) numb = Math.round(numb);
             return formatterWithUnits.format(numb) + " B";
         }
         return String.valueOf(number) + " B";

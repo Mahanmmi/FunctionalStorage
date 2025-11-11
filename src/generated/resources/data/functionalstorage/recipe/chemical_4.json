@@ -1,0 +1,27 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:item_exists",
+      "item": "functionalstorage:chemical_4"
+    }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {
+      "item": "mekanism:basic_chemical_tank"
+    },
+    "P": {
+      "tag": "minecraft:planks"
+    }
+  },
+  "pattern": [
+    "CPC",
+    "PPP",
+    "CPC"
+  ],
+  "result": {
+    "count": 4,
+    "id": "functionalstorage:chemical_4"
+  }
+}
