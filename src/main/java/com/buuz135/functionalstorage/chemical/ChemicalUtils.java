@@ -49,8 +49,6 @@ public class ChemicalUtils {
         return NumberUtils.getFormatedFluidBigNumber(amount);
     }
     
-
-    
     /**
      * Checks if a chemical is radioactive using direct API
      */

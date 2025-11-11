@@ -43,7 +43,6 @@ public class ChemicalDrawerRenderer implements BlockEntityRenderer<ChemicalDrawe
             float red = color[1];
             float green = color[2];
             float blue = color[3];
-            // Handle gaseous chemicals with different alpha (following plan requirement)
             float alpha = amount == 0 ? 0.3f : (stack.getChemical().isGaseous() ? Math.min(1.0f, color[0] + 0.2f) : color[0]);
 
             float x1 = (float) bounds.minX;
@@ -67,7 +66,7 @@ public class ChemicalDrawerRenderer implements BlockEntityRenderer<ChemicalDrawe
 
             Matrix4f posMat = matrixStack.last().pose();
 
-            // TOP face - exact FluidDrawerRenderer pattern
+            // TOP face
             {
                 float u1 = still.getU(bx1);
                 float u2 = still.getU(bx2);
@@ -119,8 +118,6 @@ public class ChemicalDrawerRenderer implements BlockEntityRenderer<ChemicalDrawe
         return new float[]{alpha, red, green, blue};
     }
 
-
-
     @Override
     public void render(ChemicalDrawerTile tile, float partialTicks, PoseStack matrixStack, MultiBufferSource bufferIn, int combinedLightIn, int combinedOverlayIn) {
         if (!FunctionalStorage.MEKANISM_LOADED) return;
@@ -171,7 +168,6 @@ public class ChemicalDrawerRenderer implements BlockEntityRenderer<ChemicalDrawe
                 chemicalStack = handler.getFilterStack()[0];
                 displayAmount = 0;
             }
-            // Match FluidDrawerRenderer bounds calculation exactly - creates gravity effect
             AABB bounds = new AABB(1 / 16D, 1.25 / 16D, 1 / 16D, 15 / 16D, 1.25 / 16D + (chemicalStack.getAmount() / (double) handler.getChemicalTankCapacity(0)) * (12.5 / 16D), 15 / 16D);
             renderChemicalStack(matrixStack, bufferIn, combinedLight, combinedOverlay, chemicalStack, displayAmount, handler.getChemicalTankCapacity(0), 0.007f, tile.getDrawerOptions(), bounds, false, false);
         }
@@ -180,7 +176,7 @@ public class ChemicalDrawerRenderer implements BlockEntityRenderer<ChemicalDrawe
     private void render2Slot(PoseStack matrixStack, MultiBufferSource bufferIn, int combinedLight, int combinedOverlay, ChemicalDrawerTile tile) {
         BigChemicalHandler handler = tile.getChemicalHandler();
         
-        // Top slot - match FluidDrawerRenderer exactly
+        // Top slot
         if (!handler.getChemicalInTank(0).isEmpty() || (tile.isLocked() && !handler.getFilterStack()[0].isEmpty())) {
             ChemicalStack chemicalStack = handler.getChemicalInTank(0);
             long displayAmount = chemicalStack.getAmount();
@@ -211,7 +207,7 @@ public class ChemicalDrawerRenderer implements BlockEntityRenderer<ChemicalDrawe
     private void render4Slot(PoseStack matrixStack, MultiBufferSource bufferIn, int combinedLight, int combinedOverlay, ChemicalDrawerTile tile) {
         BigChemicalHandler handler = tile.getChemicalHandler();
         
-        // Slot 0 - match FluidDrawerRenderer exactly
+        // Slot 0
         if (!handler.getChemicalInTank(0).isEmpty() || (tile.isLocked() && !handler.getFilterStack()[0].isEmpty())) {
             matrixStack.pushPose();
             matrixStack.translate(0.5, 0, 0);

@@ -14,7 +14,7 @@ import net.minecraft.resources.RegistryOps;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
+
 import java.util.function.Predicate;
 
 /**
@@ -27,7 +27,6 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
     private ChemicalStack[] filterStack;
     private long capacity;
     
-    // Radioactive mode state tracking
     private boolean radioactiveMode = false;
     
     // Reference to tile for radioactive upgrade checking
@@ -112,7 +111,6 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
             return stack;
         }
         
-        // Note: No chemical mixing validation needed - upgrade validation prevents mixing
         
         // Try existing tanks first - use same pattern as BigFluidHandler.fill()
         for (CustomChemicalTank tank : tanks) {
@@ -137,8 +135,6 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
 
     @Override
     public @NotNull ChemicalStack extractChemical(long amount, @NotNull Action action) {
-        // No special handling needed for extraction
-        
         for (CustomChemicalTank tank : tanks) {
             if (!tank.getStack().isEmpty()) {
                 ChemicalStack result = tank.extract(amount, action, AutomationType.EXTERNAL);
@@ -395,8 +391,6 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
             if (stack.isEmpty() || !isValid(stack)) {
                 return stack;
             }
-
-
 
             if (this.stack.isEmpty()) {
                 long insertAmount = Math.min(stack.getAmount(), this.capacity);

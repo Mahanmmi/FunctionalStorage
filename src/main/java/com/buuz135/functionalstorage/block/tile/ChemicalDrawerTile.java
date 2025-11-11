@@ -259,15 +259,6 @@ public class ChemicalDrawerTile extends ControllableDrawerTile<ChemicalDrawerTil
         
         return Component.empty();
     }
-    
-    /**
-     * Gets the current capacity of the chemical storage
-     */
-    public long getCurrentCapacity() {
-        return chemicalHandler != null ? chemicalHandler.getCapacity() : 0L;
-    }
-
-
 
     @Override
     public void setLocked(boolean locked) {
