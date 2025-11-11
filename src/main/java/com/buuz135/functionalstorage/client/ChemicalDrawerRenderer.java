@@ -1,7 +1,6 @@
 package com.buuz135.functionalstorage.client;
 
 import com.buuz135.functionalstorage.FunctionalStorage;
-import com.buuz135.functionalstorage.client.FunctionalStorageClientConfig;
 import com.buuz135.functionalstorage.block.tile.ChemicalDrawerTile;
 import com.buuz135.functionalstorage.block.tile.ControllableDrawerTile;
 import com.buuz135.functionalstorage.chemical.BigChemicalHandler;
@@ -13,7 +12,6 @@ import com.mojang.math.Axis;
 import mekanism.api.chemical.ChemicalStack;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -157,104 +155,119 @@ public class ChemicalDrawerRenderer implements BlockEntityRenderer<ChemicalDrawe
             render2Slot(matrixStack, bufferIn, combinedLightIn, combinedOverlayIn, tile);
         if (tile.getDrawerType() == FunctionalStorage.DrawerType.X_4)
             render4Slot(matrixStack, bufferIn, combinedLightIn, combinedOverlayIn, tile);
-
+        matrixStack.pushPose();
+        matrixStack.translate(0, 0, 0.9688);
         DrawerRenderer.renderUpgrades(matrixStack, bufferIn, combinedLightIn, combinedOverlayIn, tile);
+        matrixStack.popPose();
         matrixStack.popPose();
     }
 
     private void render1Slot(PoseStack matrixStack, MultiBufferSource bufferIn, int combinedLight, int combinedOverlay, ChemicalDrawerTile tile) {
         BigChemicalHandler handler = tile.getChemicalHandler();
-        ChemicalStack stack = handler.getChemicalInTank(0);
-        ChemicalStack filterStack = handler.getFilterStack()[0];
-        
-        ChemicalStack displayStack = !stack.isEmpty() ? stack : filterStack;
-        if (!displayStack.isEmpty()) {
-            long amount = !stack.isEmpty() ? stack.getAmount() : 0;
-            long maxAmount = handler.getChemicalTankCapacity(0);
-            
-            AABB bounds = new AABB(0.0625, 0.0625, 0.001, 0.9375, 0.9375, 0.125);
-            renderChemicalStack(matrixStack, bufferIn, combinedLight, combinedOverlay, displayStack, 
-                               amount, maxAmount, 1.0f, tile.getDrawerOptions(), bounds, false, false);
+        if (!handler.getChemicalInTank(0).isEmpty() || (tile.isLocked() && !handler.getFilterStack()[0].isEmpty())) {
+            ChemicalStack chemicalStack = handler.getChemicalInTank(0);
+            long displayAmount = chemicalStack.getAmount();
+            if (chemicalStack.isEmpty() && tile.isLocked() && !handler.getFilterStack()[0].isEmpty()) {
+                chemicalStack = handler.getFilterStack()[0];
+                displayAmount = 0;
+            }
+            // Match FluidDrawerRenderer bounds calculation exactly - creates gravity effect
+            AABB bounds = new AABB(1 / 16D, 1.25 / 16D, 1 / 16D, 15 / 16D, 1.25 / 16D + (chemicalStack.getAmount() / (double) handler.getChemicalTankCapacity(0)) * (12.5 / 16D), 15 / 16D);
+            renderChemicalStack(matrixStack, bufferIn, combinedLight, combinedOverlay, chemicalStack, displayAmount, handler.getChemicalTankCapacity(0), 0.007f, tile.getDrawerOptions(), bounds, false, false);
         }
     }
 
     private void render2Slot(PoseStack matrixStack, MultiBufferSource bufferIn, int combinedLight, int combinedOverlay, ChemicalDrawerTile tile) {
         BigChemicalHandler handler = tile.getChemicalHandler();
         
-        // Top slot
-        ChemicalStack stack0 = handler.getChemicalInTank(0);
-        ChemicalStack filterStack0 = handler.getFilterStack()[0];
-        ChemicalStack displayStack0 = !stack0.isEmpty() ? stack0 : filterStack0;
-        if (!displayStack0.isEmpty()) {
-            long amount = !stack0.isEmpty() ? stack0.getAmount() : 0;
-            long maxAmount = handler.getChemicalTankCapacity(0);
-            AABB bounds = new AABB(0.0625, 0.5625, 0.001, 0.9375, 0.9375, 0.125);
-            renderChemicalStack(matrixStack, bufferIn, combinedLight, combinedOverlay, displayStack0, 
-                               amount, maxAmount, 0.75f, tile.getDrawerOptions(), bounds, true, true);
+        // Top slot - match FluidDrawerRenderer exactly
+        if (!handler.getChemicalInTank(0).isEmpty() || (tile.isLocked() && !handler.getFilterStack()[0].isEmpty())) {
+            ChemicalStack chemicalStack = handler.getChemicalInTank(0);
+            long displayAmount = chemicalStack.getAmount();
+            if (chemicalStack.isEmpty() && tile.isLocked() && !handler.getFilterStack()[0].isEmpty()) {
+                chemicalStack = handler.getFilterStack()[0];
+                displayAmount = 0;
+            }
+            AABB bounds = new AABB(1 / 16D, 1.25 / 16D, 1 / 16D, 15 / 16D, 1.25 / 16D + (chemicalStack.getAmount() / (double) handler.getChemicalTankCapacity(0)) * (5.5 / 16D), 15 / 16D);
+            renderChemicalStack(matrixStack, bufferIn, combinedLight, combinedOverlay, chemicalStack, displayAmount, handler.getChemicalTankCapacity(0), 0.007f, tile.getDrawerOptions(), bounds, false, true);
         }
         
-        // Bottom slot
-        ChemicalStack stack1 = handler.getChemicalInTank(1);
-        ChemicalStack filterStack1 = handler.getFilterStack()[1];
-        ChemicalStack displayStack1 = !stack1.isEmpty() ? stack1 : filterStack1;
-        if (!displayStack1.isEmpty()) {
-            long amount = !stack1.isEmpty() ? stack1.getAmount() : 0;
-            long maxAmount = handler.getChemicalTankCapacity(1);
-            AABB bounds = new AABB(0.0625, 0.0625, 0.001, 0.9375, 0.4375, 0.125);
-            renderChemicalStack(matrixStack, bufferIn, combinedLight, combinedOverlay, displayStack1, 
-                               amount, maxAmount, 0.75f, tile.getDrawerOptions(), bounds, true, true);
+        // Bottom slot  
+        if (!handler.getChemicalInTank(1).isEmpty() || (tile.isLocked() && !handler.getFilterStack()[1].isEmpty())) {
+            matrixStack.pushPose();
+            matrixStack.translate(0, 0.5, 0);
+            ChemicalStack chemicalStack = handler.getChemicalInTank(1);
+            long displayAmount = chemicalStack.getAmount();
+            if (chemicalStack.isEmpty() && tile.isLocked() && !handler.getFilterStack()[1].isEmpty()) {
+                chemicalStack = handler.getFilterStack()[1];
+                displayAmount = 0;
+            }
+            AABB bounds = new AABB(1 / 16D, 1.25 / 16D, 1 / 16D, 15 / 16D, 1.25 / 16D + (chemicalStack.getAmount() / (double) handler.getChemicalTankCapacity(1)) * (5.5 / 16D), 15 / 16D);
+            renderChemicalStack(matrixStack, bufferIn, combinedLight, combinedOverlay, chemicalStack, displayAmount, handler.getChemicalTankCapacity(1), 0.007f, tile.getDrawerOptions(), bounds, false, true);
+            matrixStack.popPose();
         }
     }
 
     private void render4Slot(PoseStack matrixStack, MultiBufferSource bufferIn, int combinedLight, int combinedOverlay, ChemicalDrawerTile tile) {
         BigChemicalHandler handler = tile.getChemicalHandler();
         
-        // Top-left
-        ChemicalStack stack0 = handler.getChemicalInTank(0);
-        ChemicalStack filterStack0 = handler.getFilterStack()[0];
-        ChemicalStack displayStack0 = !stack0.isEmpty() ? stack0 : filterStack0;
-        if (!displayStack0.isEmpty()) {
-            long amount = !stack0.isEmpty() ? stack0.getAmount() : 0;
-            long maxAmount = handler.getChemicalTankCapacity(0);
-            AABB bounds = new AABB(0.5625, 0.5625, 0.001, 0.9375, 0.9375, 0.125);
-            renderChemicalStack(matrixStack, bufferIn, combinedLight, combinedOverlay, displayStack0, 
-                               amount, maxAmount, 0.5f, tile.getDrawerOptions(), bounds, true, true);
+        // Slot 0 - match FluidDrawerRenderer exactly
+        if (!handler.getChemicalInTank(0).isEmpty() || (tile.isLocked() && !handler.getFilterStack()[0].isEmpty())) {
+            matrixStack.pushPose();
+            matrixStack.translate(0.5, 0, 0);
+            ChemicalStack chemicalStack = handler.getChemicalInTank(0);
+            long displayAmount = chemicalStack.getAmount();
+            if (chemicalStack.isEmpty() && tile.isLocked() && !handler.getFilterStack()[0].isEmpty()) {
+                chemicalStack = handler.getFilterStack()[0];
+                displayAmount = 0;
+            }
+            AABB bounds = new AABB(1 / 16D, 1.25 / 16D, 1 / 16D, 8 / 16D, 1.25 / 16D + (chemicalStack.getAmount() / (double) handler.getChemicalTankCapacity(0)) * (5.5 / 16D), 15 / 16D);
+            renderChemicalStack(matrixStack, bufferIn, combinedLight, combinedOverlay, chemicalStack, displayAmount, handler.getChemicalTankCapacity(0), 0.007f, tile.getDrawerOptions(), bounds, true, true);
+            matrixStack.popPose();
         }
         
-        // Top-right
-        ChemicalStack stack1 = handler.getChemicalInTank(1);
-        ChemicalStack filterStack1 = handler.getFilterStack()[1];
-        ChemicalStack displayStack1 = !stack1.isEmpty() ? stack1 : filterStack1;
-        if (!displayStack1.isEmpty()) {
-            long amount = !stack1.isEmpty() ? stack1.getAmount() : 0;
-            long maxAmount = handler.getChemicalTankCapacity(1);
-            AABB bounds = new AABB(0.0625, 0.5625, 0.001, 0.4375, 0.9375, 0.125);
-            renderChemicalStack(matrixStack, bufferIn, combinedLight, combinedOverlay, displayStack1, 
-                               amount, maxAmount, 0.5f, tile.getDrawerOptions(), bounds, true, true);
+        // Slot 1
+        if (!handler.getChemicalInTank(1).isEmpty() || (tile.isLocked() && !handler.getFilterStack()[1].isEmpty())) {
+            matrixStack.pushPose();
+            ChemicalStack chemicalStack = handler.getChemicalInTank(1);
+            long displayAmount = chemicalStack.getAmount();
+            if (chemicalStack.isEmpty() && tile.isLocked() && !handler.getFilterStack()[1].isEmpty()) {
+                chemicalStack = handler.getFilterStack()[1];
+                displayAmount = 0;
+            }
+            AABB bounds = new AABB(1 / 16D, 1.25 / 16D, 1 / 16D, 8 / 16D, 1.25 / 16D + (chemicalStack.getAmount() / (double) handler.getChemicalTankCapacity(1)) * (5.5 / 16D), 15 / 16D);
+            renderChemicalStack(matrixStack, bufferIn, combinedLight, combinedOverlay, chemicalStack, displayAmount, handler.getChemicalTankCapacity(1), 0.007f, tile.getDrawerOptions(), bounds, true, true);
+            matrixStack.popPose();
         }
         
-        // Bottom-left
-        ChemicalStack stack2 = handler.getChemicalInTank(2);
-        ChemicalStack filterStack2 = handler.getFilterStack()[2];
-        ChemicalStack displayStack2 = !stack2.isEmpty() ? stack2 : filterStack2;
-        if (!displayStack2.isEmpty()) {
-            long amount = !stack2.isEmpty() ? stack2.getAmount() : 0;
-            long maxAmount = handler.getChemicalTankCapacity(2);
-            AABB bounds = new AABB(0.5625, 0.0625, 0.001, 0.9375, 0.4375, 0.125);
-            renderChemicalStack(matrixStack, bufferIn, combinedLight, combinedOverlay, displayStack2, 
-                               amount, maxAmount, 0.5f, tile.getDrawerOptions(), bounds, true, true);
+        // Slot 2
+        if (!handler.getChemicalInTank(2).isEmpty() || (tile.isLocked() && !handler.getFilterStack()[2].isEmpty())) {
+            matrixStack.pushPose();
+            matrixStack.translate(0.5, 0.5, 0);
+            ChemicalStack chemicalStack = handler.getChemicalInTank(2);
+            long displayAmount = chemicalStack.getAmount();
+            if (chemicalStack.isEmpty() && tile.isLocked() && !handler.getFilterStack()[2].isEmpty()) {
+                chemicalStack = handler.getFilterStack()[2];
+                displayAmount = 0;
+            }
+            AABB bounds = new AABB(1 / 16D, 1.25 / 16D, 1 / 16D, 8 / 16D, 1.25 / 16D + (chemicalStack.getAmount() / (double) handler.getChemicalTankCapacity(2)) * (5.5 / 16D), 15 / 16D);
+            renderChemicalStack(matrixStack, bufferIn, combinedLight, combinedOverlay, chemicalStack, displayAmount, handler.getChemicalTankCapacity(2), 0.007f, tile.getDrawerOptions(), bounds, true, true);
+            matrixStack.popPose();
         }
         
-        // Bottom-right
-        ChemicalStack stack3 = handler.getChemicalInTank(3);
-        ChemicalStack filterStack3 = handler.getFilterStack()[3];
-        ChemicalStack displayStack3 = !stack3.isEmpty() ? stack3 : filterStack3;
-        if (!displayStack3.isEmpty()) {
-            long amount = !stack3.isEmpty() ? stack3.getAmount() : 0;
-            long maxAmount = handler.getChemicalTankCapacity(3);
-            AABB bounds = new AABB(0.0625, 0.0625, 0.001, 0.4375, 0.4375, 0.125);
-            renderChemicalStack(matrixStack, bufferIn, combinedLight, combinedOverlay, displayStack3, 
-                               amount, maxAmount, 0.5f, tile.getDrawerOptions(), bounds, true, true);
+        // Slot 3
+        if (!handler.getChemicalInTank(3).isEmpty() || (tile.isLocked() && !handler.getFilterStack()[3].isEmpty())) {
+            matrixStack.pushPose();
+            matrixStack.translate(0, 0.5, 0);
+            ChemicalStack chemicalStack = handler.getChemicalInTank(3);
+            long displayAmount = chemicalStack.getAmount();
+            if (chemicalStack.isEmpty() && tile.isLocked() && !handler.getFilterStack()[3].isEmpty()) {
+                chemicalStack = handler.getFilterStack()[3];
+                displayAmount = 0;
+            }
+            AABB bounds = new AABB(1 / 16D, 1.25 / 16D, 1 / 16D, 8 / 16D, 1.25 / 16D + (chemicalStack.getAmount() / (double) handler.getChemicalTankCapacity(3)) * (5.5 / 16D), 15 / 16D);
+            renderChemicalStack(matrixStack, bufferIn, combinedLight, combinedOverlay, chemicalStack, displayAmount, handler.getChemicalTankCapacity(3), 0.007f, tile.getDrawerOptions(), bounds, true, true);
+            matrixStack.popPose();
         }
     }
 }

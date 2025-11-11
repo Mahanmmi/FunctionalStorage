@@ -95,6 +95,20 @@ public class UpgradeItem extends BasicItem {
         super.addTooltipDetails(key, stack, tooltip, advanced);
         tooltip.add(Component.translatable("upgrade.type").withStyle(ChatFormatting.YELLOW).append(Component.translatable("upgrade.type." + getType().name().toLowerCase(Locale.ROOT)).withStyle(ChatFormatting.WHITE)));
         Item item = stack.getItem();
+        
+        // Add chemical drawer compatibility when Mekanism is loaded
+        if (FunctionalStorage.MEKANISM_LOADED) {
+            if (item.equals(FunctionalStorage.VOID_UPGRADE.get())) {
+                tooltip.add(Component.translatable("drawer_upgrade.functionalstorage.void.chemical").withStyle(ChatFormatting.GRAY));
+            } else if (item.equals(FunctionalStorage.PUSHING_UPGRADE.get())) {
+                tooltip.add(Component.translatable("drawer_upgrade.functionalstorage.pusher.chemical").withStyle(ChatFormatting.GRAY));
+            } else if (item.equals(FunctionalStorage.PULLING_UPGRADE.get())) {
+                tooltip.add(Component.translatable("drawer_upgrade.functionalstorage.puller.chemical").withStyle(ChatFormatting.GRAY));
+            } else if (item.equals(FunctionalStorage.REDSTONE_UPGRADE.get())) {
+                tooltip.add(Component.translatable("drawer_upgrade.functionalstorage.redstone.chemical").withStyle(ChatFormatting.GRAY));
+            }
+        }
+        
         if (isDirectionUpgrade(item) && stack.has(FSAttachments.DIRECTION)) {
             tooltip.add(Component.translatable("item.utility.direction").withStyle(ChatFormatting.YELLOW).append(Component.translatable(WordUtils.capitalize(getDirection(stack).getName().toLowerCase(Locale.ROOT))).withStyle(ChatFormatting.WHITE)));
             tooltip.add(Component.literal(""));

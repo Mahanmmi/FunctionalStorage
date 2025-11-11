@@ -32,6 +32,14 @@ public class FunctionalStorageLangProvider extends LanguageProvider {
         this.add(FunctionalStorage.FRAMED_FLUID_DRAWER_1.getBlock(), "Framed Fluid Drawer (" + FunctionalStorage.DrawerType.X_1.getDisplayName() + ")");
         this.add(FunctionalStorage.FRAMED_FLUID_DRAWER_2.getBlock(), "Framed Fluid Drawer (" + FunctionalStorage.DrawerType.X_2.getDisplayName() + ")");
         this.add(FunctionalStorage.FRAMED_FLUID_DRAWER_4.getBlock(), "Framed Fluid Drawer (" + FunctionalStorage.DrawerType.X_4.getDisplayName() + ")");
+        
+        // Chemical drawer localization (only when Mekanism is loaded)
+        if (FunctionalStorage.MEKANISM_LOADED) {
+            this.add(FunctionalStorage.CHEMICAL_DRAWER_1.getBlock(), "Chemical Drawer (" + FunctionalStorage.DrawerType.X_1.getDisplayName() + ")");
+            this.add(FunctionalStorage.CHEMICAL_DRAWER_2.getBlock(), "Chemical Drawer (" + FunctionalStorage.DrawerType.X_2.getDisplayName() + ")");
+            this.add(FunctionalStorage.CHEMICAL_DRAWER_4.getBlock(), "Chemical Drawer (" + FunctionalStorage.DrawerType.X_4.getDisplayName() + ")");
+        }
+        
         this.add(FunctionalStorage.FRAMED_SIMPLE_COMPACTING_DRAWER.getBlock(), "Framed Simple Compacting Drawer");
         this.add(FunctionalStorage.COMPACTING_DRAWER.getBlock(), "Compacting Drawer");
         this.add(FunctionalStorage.FRAMED_COMPACTING_DRAWER.getBlock(), "Framed Compacting Drawer");
@@ -55,6 +63,9 @@ public class FunctionalStorageLangProvider extends LanguageProvider {
         this.add(FunctionalStorage.FRAMED_CONTROLLER_EXTENSION.getBlock(), "Framed Controller Access Point");
         this.add("storageupgrade.desc.item", "Multiplies the block item storage by ");
         this.add("storageupgrade.desc.fluid", "Multiplies the block fluid storage by ");
+        if (FunctionalStorage.MEKANISM_LOADED) {
+            this.add("storageupgrade.desc.chemical", "Multiplies the block chemical storage by ");
+        }
         this.add("storageupgrade.desc.range", "Increases controller radius by %s blocks");
         for (StorageUpgradeItem.StorageTier storageTier : FunctionalStorage.STORAGE_UPGRADES.keySet()) {
             this.add(FunctionalStorage.STORAGE_UPGRADES.get(storageTier).get(), WordUtils.capitalize(storageTier.name().replace("_", " ").toLowerCase()) + (storageTier == StorageUpgradeItem.StorageTier.IRON ? " Downgrade" : " Upgrade"));
@@ -100,6 +111,7 @@ public class FunctionalStorageLangProvider extends LanguageProvider {
         this.add("gui.functionalstorage.amount", "Amount: ");
         this.add("gui.functionalstorage.slot", "Slot: ");
         this.add("gui.functionalstorage.fluid", "Fluid: ");
+        this.add("gui.functionalstorage.chemical", "Chemical: ");
         this.add("gui.functionalstorage.open_gui", "Right Click while Crouching to open the GUI");
         this.add("gui.functionalstorage.storage", "Storage");
         this.add("gui.functionalstorage.utility", "Utility");
@@ -114,6 +126,12 @@ public class FunctionalStorageLangProvider extends LanguageProvider {
 
         this.add("drawer_upgrade.functionalstorage.void.item", "Voids excess items");
         this.add("drawer_upgrade.functionalstorage.void.fluid", "Voids excess fluids");
+            if (FunctionalStorage.MEKANISM_LOADED) {
+                this.add("drawer_upgrade.functionalstorage.void.chemical", "Voids excess chemicals");
+                this.add("drawer_upgrade.functionalstorage.pusher.chemical", "Pushes chemicals to adjacent compatible blocks");
+                this.add("drawer_upgrade.functionalstorage.puller.chemical", "Pulls chemicals from adjacent compatible blocks");
+                this.add("drawer_upgrade.functionalstorage.redstone.chemical", "Emits redstone signal based on chemical fill level");
+            }
         this.add("drawer_upgrade.functionalstorage.pull.item", "Pulls items: %s");
         this.add("drawer_upgrade.functionalstorage.pull.fluid", "Pulls fluids: %s");
         this.add("drawer_upgrade.functionalstorage.push.item", "Pushes items: %s");

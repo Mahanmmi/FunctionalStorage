@@ -1,21 +1,40 @@
 {
   "variants": {
-    "subfacing=east": {
+    "locked=false,subfacing=east": {
       "model": "functionalstorage:block/chemical_4",
       "uvlock": true,
       "y": 90
     },
-    "subfacing=north": {
+    "locked=false,subfacing=north": {
       "model": "functionalstorage:block/chemical_4",
       "uvlock": true
     },
-    "subfacing=south": {
+    "locked=false,subfacing=south": {
       "model": "functionalstorage:block/chemical_4",
       "uvlock": true,
       "y": 180
     },
-    "subfacing=west": {
+    "locked=false,subfacing=west": {
       "model": "functionalstorage:block/chemical_4",
+      "uvlock": true,
+      "y": 270
+    },
+    "locked=true,subfacing=east": {
+      "model": "functionalstorage:block/chemical_4_locked",
+      "uvlock": true,
+      "y": 90
+    },
+    "locked=true,subfacing=north": {
+      "model": "functionalstorage:block/chemical_4_locked",
+      "uvlock": true
+    },
+    "locked=true,subfacing=south": {
+      "model": "functionalstorage:block/chemical_4_locked",
+      "uvlock": true,
+      "y": 180
+    },
+    "locked=true,subfacing=west": {
+      "model": "functionalstorage:block/chemical_4_locked",
       "uvlock": true,
       "y": 270
     }

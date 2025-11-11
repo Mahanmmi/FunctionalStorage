@@ -47,6 +47,18 @@ public class ChemicalDrawerTile extends ControllableDrawerTile<ChemicalDrawerTil
         this.type = type;
         this.chemicalHandler = new BigChemicalHandler(type.getSlots(), getTankCapacity(getStorageMultiplier())) {
             @Override
+            public @NotNull ChemicalStack getChemicalInTank(int tank) {
+                ChemicalStack stack = super.getChemicalInTank(tank);
+                if (!stack.isEmpty() && isDrawerCreative()) stack.setAmount(Long.MAX_VALUE);
+                return stack;
+            }
+            
+            @Override
+            public long getChemicalTankCapacity(int tank) {
+                return isDrawerCreative() ? Long.MAX_VALUE : super.getChemicalTankCapacity(tank);
+            }
+            
+            @Override
             public void onChange() {
                 syncObject(chemicalHandler);
             }
@@ -116,14 +128,14 @@ public class ChemicalDrawerTile extends ControllableDrawerTile<ChemicalDrawerTil
                                 var chemicalTank = this.chemicalHandler.getTankList()[tankId];
                                 if (chemicalTank.getStack().isEmpty()) continue;
                                 
-                                var extracted = chemicalTank.extract(FunctionalStorageConfig.UPGRADE_PUSH_FLUID, Action.SIMULATE, AutomationType.INTERNAL);
+                                var extracted = chemicalTank.extract(FunctionalStorageConfig.UPGRADE_PUSH_FLUID, Action.SIMULATE, AutomationType.EXTERNAL);
                                 if (extracted.isEmpty()) continue;
                                 
                                 var remainingAfterInsert = otherChemicalHandler.insertChemical(extracted, Action.EXECUTE);
                                 var actualInserted = extracted.getAmount() - remainingAfterInsert.getAmount();
                                 
                                 if (actualInserted > 0) {
-                                    chemicalTank.extract(actualInserted, Action.EXECUTE, AutomationType.INTERNAL);
+                                    chemicalTank.extract(actualInserted, Action.EXECUTE, AutomationType.EXTERNAL);
                                     this.chemicalHandler.onChange();
                                     break;
                                 }
@@ -145,10 +157,6 @@ public class ChemicalDrawerTile extends ControllableDrawerTile<ChemicalDrawerTil
                                 }
                             }
                         }
-                    }
-                    if (item.equals(FunctionalStorage.COLLECTOR_UPGRADE.get())) {
-                        // Chemical collection from world - not implemented in Stage 1
-                        // Would require chemical entity detection and pickup logic
                     }
                 }
             }

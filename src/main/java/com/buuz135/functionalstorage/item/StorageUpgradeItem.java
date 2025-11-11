@@ -1,5 +1,6 @@
 package com.buuz135.functionalstorage.item;
 
+import com.buuz135.functionalstorage.FunctionalStorage;
 import com.buuz135.functionalstorage.block.config.FunctionalStorageConfig;
 import com.hrznstudio.titanium.item.BasicItem;
 import net.minecraft.ChatFormatting;
@@ -41,6 +42,12 @@ public class StorageUpgradeItem extends UpgradeItem {
         } else {
             tooltip.add(Component.translatable("storageupgrade.desc.item").withStyle(ChatFormatting.GRAY).append(new DecimalFormat().format(FunctionalStorageConfig.getLevelMult(this.storageTier.getLevel()))));
             tooltip.add(Component.translatable("storageupgrade.desc.fluid").withStyle(ChatFormatting.GRAY).append(new DecimalFormat().format(FunctionalStorageConfig.getLevelMult(this.storageTier.getLevel()) / FunctionalStorageConfig.FLUID_DIVISOR)));
+            
+            // Add chemical capacity info when Mekanism is loaded and storage tier is supported
+            if (FunctionalStorage.MEKANISM_LOADED && storageTier != StorageTier.IRON) {
+                tooltip.add(Component.translatable("storageupgrade.desc.chemical").withStyle(ChatFormatting.GRAY).append(new DecimalFormat().format(FunctionalStorageConfig.getLevelMult(this.storageTier.getLevel()) / FunctionalStorageConfig.FLUID_DIVISOR)));
+            }
+            
             tooltip.add(Component.translatable("storageupgrade.desc.range", new DecimalFormat().format(FunctionalStorageConfig.getLevelMult(this.storageTier.getLevel()) / FunctionalStorageConfig.RANGE_DIVISOR)).withStyle(ChatFormatting.GRAY));
         }
     }

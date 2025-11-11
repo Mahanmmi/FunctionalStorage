@@ -4,6 +4,7 @@ import com.buuz135.functionalstorage.block.*;
 import com.buuz135.functionalstorage.block.tile.*;
 import com.buuz135.functionalstorage.block.ChemicalDrawerBlock;
 import com.buuz135.functionalstorage.block.tile.ChemicalDrawerTile;
+import com.buuz135.functionalstorage.block.tile.StorageControllerTile;
 import com.buuz135.functionalstorage.chemical.ChemicalCapabilities;
 import com.buuz135.functionalstorage.client.ChemicalDrawerRenderer;
 import com.buuz135.functionalstorage.client.ClientSetup;
@@ -363,17 +364,22 @@ public class FunctionalStorage extends ModuleController {
     }
 
     /**
-     * Registers chemical capabilities for chemical drawer blocks only.
-     * Follows the same semantic pattern as fluid drawers (no item capability registration).
-     */
+    * Registers chemical capabilities for chemical drawer blocks and storage controllers.
+    * Follows the same semantic pattern as fluid drawers (no item capability registration).
+    */
     private void registerChemicalCapabilities(RegisterCapabilitiesEvent event) {
         // Register block chemical capabilities (matching FluidDrawer pattern - no item capabilities)
         event.registerBlock(ChemicalCapabilities.CHEMICAL.block(), (level, pos, state, blockEntity, side) -> {
             if (blockEntity instanceof ChemicalDrawerTile tile) {
                 return tile.getChemicalHandler(side);
             }
+            if (blockEntity instanceof StorageControllerTile tile) {
+                return tile.getChemicalHandler(side);
+            }
             return null;
-        }, CHEMICAL_DRAWER_1.getBlock(), CHEMICAL_DRAWER_2.getBlock(), CHEMICAL_DRAWER_4.getBlock());
+        }, CHEMICAL_DRAWER_1.getBlock(), CHEMICAL_DRAWER_2.getBlock(), CHEMICAL_DRAWER_4.getBlock(),
+           DRAWER_CONTROLLER.getBlock(), FRAMED_DRAWER_CONTROLLER.getBlock(), 
+           CONTROLLER_EXTENSION.getBlock(), FRAMED_CONTROLLER_EXTENSION.getBlock());
     }
 
     public enum DrawerType {

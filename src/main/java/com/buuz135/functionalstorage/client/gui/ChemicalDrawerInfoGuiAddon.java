@@ -11,12 +11,16 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -63,98 +67,99 @@ public class ChemicalDrawerInfoGuiAddon extends BasicScreenAddon {
 
     @Override
     public void drawBackgroundLayer(GuiGraphics guiGraphics, Screen screen, IAssetProvider provider, int guiX, int guiY, int mouseX, int mouseY, float partialTicks) {
+        for (var i = 0; i < slotAmount; i++) {
+            var chemicalStack = chemicalHandlerSupplier.get().getChemicalInTank(i);
+            if (chemicalStack.isEmpty() && chemicalHandlerSupplier.get().isDrawerLocked()) {
+                chemicalStack = chemicalHandlerSupplier.get().getFilterStack()[i];
+            }
+            if (!chemicalStack.isEmpty()) {
+                renderChemical(guiGraphics, screen, guiX, guiY, chemicalStack, i, slotAmount);
+            }
+        }
         RenderSystem.setShaderTexture(0, gui);
-        guiGraphics.blit(gui, guiX + getPosX(), guiY + getPosY(), 0, 0, 48, 48);
-        var handler = chemicalHandlerSupplier.get();
-        if (handler != null) {
-            for (int i = 0; i < slotAmount; i++) {
-                var chemicalStack = handler.getChemicalInTank(i);
-                if (!chemicalStack.isEmpty()) {
-                    var pos = slotPosition.apply(i);
-                    var area = getSizeForSlots(i, slotAmount);
-                    
-                    // Render chemical using Mekanism's renderer
-                    try {
-                        // Use Mekanism's chemical rendering if available
-                        int color = chemicalStack.getChemical().getTint();
-                        
-                        // Render colored rectangle representing the chemical
-                        float red = ((color >> 16) & 0xFF) / 255.0F;
-                        float green = ((color >> 8) & 0xFF) / 255.0F;
-                        float blue = (color & 0xFF) / 255.0F;
-                        
-                        RenderSystem.setShaderColor(red, green, blue, 1.0F);
-                        guiGraphics.fill(
-                            guiX + getPosX() + pos.getLeft() + area.getX(),
-                            guiY + getPosY() + pos.getRight() + area.getY(),
-                            guiX + getPosX() + pos.getLeft() + area.getX() + area.getWidth(),
-                            guiY + getPosY() + pos.getRight() + area.getY() + area.getHeight(),
-                            0xFF000000 | color
-                        );
-                        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-                    } catch (Exception e) {
-                        // Fallback to simple colored rectangle if Mekanism rendering fails
-                        guiGraphics.fill(
-                            guiX + getPosX() + pos.getLeft() + area.getX(),
-                            guiY + getPosY() + pos.getRight() + area.getY(),
-                            guiX + getPosX() + pos.getLeft() + area.getX() + area.getWidth(),
-                            guiY + getPosY() + pos.getRight() + area.getY() + area.getHeight(),
-                            0xFF666666 // Gray fallback
-                        );
-                    }
-                }
+        var size = 16 * 2 + 16;
+        guiGraphics.blit(gui, guiX + getPosX(), guiY + getPosY(), 0, 0, size, size, size, size);
+        for (var i = 0; i < slotAmount; i++) {
+            var chemicalStack = chemicalHandlerSupplier.get().getChemicalInTank(i);
+            if (!chemicalStack.isEmpty()) {
+                var x = guiX + slotPosition.apply(i).getLeft() + getPosX();
+                var y = guiY + slotPosition.apply(i).getRight() + getPosY();
+                var amount = NumberUtils.getFormatedFluidBigNumber(chemicalStack.getAmount()) + "/" + NumberUtils.getFormatedFluidBigNumber(slotMaxAmount.apply(i));
+                var scale = 0.5f;
+                guiGraphics.pose().translate(0, 0, 200);
+                guiGraphics.pose().scale(scale, scale, scale);
+                guiGraphics.drawString(Minecraft.getInstance().font, amount, (x + 17 - Minecraft.getInstance().font.width(amount) / 2) * (1 / scale), (y + 12) * (1 / scale), 0xFFFFFF, true);
+                guiGraphics.pose().scale(1 / scale, 1 / scale, 1 / scale);
+                guiGraphics.pose().translate(0, 0, -200);
             }
         }
     }
 
     @Override
     public void drawForegroundLayer(GuiGraphics guiGraphics, Screen screen, IAssetProvider provider, int guiX, int guiY, int mouseX, int mouseY, float partialTicks) {
-        var handler = chemicalHandlerSupplier.get();
-        if (handler != null) {
-            for (int i = 0; i < slotAmount; i++) {
-                var pos = slotPosition.apply(i);
-                var area = getSizeForSlots(i, slotAmount);
-                var chemicalStack = handler.getChemicalInTank(i);
-                
-                // Check if mouse is over this slot
-                if (mouseX >= (guiX + getPosX() + pos.getLeft()) && 
-                    mouseX < (guiX + getPosX() + pos.getLeft() + area.getWidth()) &&
-                    mouseY >= (guiY + getPosY() + pos.getRight()) && 
-                    mouseY < (guiY + getPosY() + pos.getRight() + area.getHeight())) {
-                    
-                    var tooltip = new ArrayList<Component>();
-                    
-                    if (!chemicalStack.isEmpty()) {
-                        // Chemical name
-                        tooltip.add(Component.literal(chemicalStack.getChemical().toString())
-                                .withStyle(ChatFormatting.WHITE));
-                        
-                        // Amount with formatting for long values (use fluid formatting for chemicals)
-                        var amount = NumberUtils.getFormatedFluidBigNumber(chemicalStack.getAmount());
-                        var capacity = NumberUtils.getFormatedFluidBigNumber(slotMaxAmount.apply(i));
-                        tooltip.add(Component.literal(amount + " / " + capacity)
-                                .withStyle(ChatFormatting.GRAY));
-                        
-                        // Chemical properties
-                        if (chemicalStack.isRadioactive()) {
-                            tooltip.add(Component.literal("Radioactive")
-                                    .withStyle(ChatFormatting.RED));
+        for (var i = 0; i < slotAmount; i++) {
+            var area = getSizeForHoverSlots(i, slotAmount);
+            if (mouseX >= (guiX + getPosX() + area.getX()) && mouseX < (guiX + getPosX() + area.getX() + area.getWidth()) && mouseY >= (guiY + getPosY() + area.getY()) && mouseY < (guiY + getPosY() + area.getY() + area.getHeight())) {
+                guiGraphics.pose().translate(0, 0, -200);
+                var componentList = new ArrayList<Component>();
+                var over = chemicalHandlerSupplier.get().getChemicalInTank(i);
+                if (over.isEmpty()) {
+                    componentList.add(Component.translatable("gui.functionalstorage.chemical").withStyle(ChatFormatting.GOLD).append(Component.literal("Empty").withStyle(ChatFormatting.WHITE)));
+                } else {
+                    int chemicalColor = over.getChemicalTint();
+                    componentList.add(Component.translatable("gui.functionalstorage.chemical").withStyle(ChatFormatting.GOLD).append(over.getChemical().getTextComponent().copy().withStyle(style -> style.withColor(chemicalColor))));
+                    var amount = NumberUtils.getFormatedFluidBigNumber(over.getAmount()) + "/" + NumberUtils.getFormatedFluidBigNumber(slotMaxAmount.apply(i));
+                    componentList.add(Component.translatable("gui.functionalstorage.amount").withStyle(ChatFormatting.GOLD).append(Component.literal(amount).withStyle(ChatFormatting.WHITE)));
+                }
+                componentList.add(Component.translatable("gui.functionalstorage.slot").withStyle(ChatFormatting.GOLD).append(Component.literal(i + "").withStyle(ChatFormatting.WHITE)));
+                guiGraphics.renderTooltip(Minecraft.getInstance().font, componentList, Optional.empty(), mouseX - guiX, mouseY - guiY);
+            }
+        }
+    }
+
+    public void renderChemical(GuiGraphics guiGraphics, Screen screen, int guiX, int guiY, ChemicalStack chemicalStack, int slot, int slotAmount) {
+        ResourceLocation texture = chemicalStack.getChemical().getIcon();
+        if (texture != null) {
+            AbstractTexture atlasTexture = screen.getMinecraft().getTextureManager().getTexture(TextureAtlas.LOCATION_BLOCKS);
+            if (atlasTexture instanceof TextureAtlas) {
+                TextureAtlasSprite sprite = ((TextureAtlas) atlasTexture).getSprite(texture);
+                if (sprite != null) {
+                    int color = chemicalStack.getChemicalTint();
+                    var rect = getSizeForSlots(slot, slotAmount);
+                    RenderSystem.setShaderColor(((color >> 16) & 0xFF) / 255f, ((color >> 8) & 0xFF) / 255f, (color & 0xFF) / 255f, 1.0f);
+                    RenderSystem.enableBlend();
+                    for (int x = 0; x < rect.getWidth(); x += 16) {
+                        for (int y = 0; y < rect.getHeight(); y += 16) {
+                            guiGraphics.blit(this.getPosX() + guiX + rect.getX() + x,
+                                    this.getPosY() + guiY + rect.getY() + y,
+                                    0,
+                                    Math.min(16, rect.getWidth() - x),
+                                    Math.min(16, rect.getHeight() - y),
+                                    sprite);
                         }
-                    } else {
-                        tooltip.add(Component.literal("Empty")
-                                .withStyle(ChatFormatting.GRAY));
-                        tooltip.add(Component.literal("0 / " + NumberUtils.getFormatedFluidBigNumber(slotMaxAmount.apply(i)))
-                                .withStyle(ChatFormatting.GRAY));
                     }
-                    
-                    // Convert Component list to FormattedCharSequence list for tooltip rendering
-                    var lines = tooltip.stream()
-                            .map(component -> component.getVisualOrderText())
-                            .toList();
-                    guiGraphics.renderTooltip(Minecraft.getInstance().font, lines, mouseX - guiX, mouseY - guiY);
+                    RenderSystem.disableBlend();
+                    RenderSystem.setShaderColor(1, 1, 1, 1);
                 }
             }
         }
+    }
+
+    public static Rect2i getSizeForHoverSlots(int currentSlot, int slotAmount) {
+        if (slotAmount == 1) {
+            return new Rect2i(9, 9, 30, 30);
+        }
+        if (slotAmount == 2) {
+            if (currentSlot == 0) return new Rect2i(0, 30, 48, 13);
+            if (currentSlot == 1) return new Rect2i(0, 6, 48, 13);
+        }
+        if (slotAmount == 4) {
+            if (currentSlot == 0) return new Rect2i(30, 30, 16, 16);
+            if (currentSlot == 1) return new Rect2i(2, 30, 16, 16);
+            if (currentSlot == 2) return new Rect2i(30, 2, 16, 16);
+            if (currentSlot == 3) return new Rect2i(2, 2, 16, 16);
+        }
+        return new Rect2i(0, 0, 0, 0);
     }
 
     @Override

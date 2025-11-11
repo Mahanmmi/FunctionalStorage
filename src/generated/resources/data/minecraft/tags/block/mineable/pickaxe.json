@@ -15,6 +15,9 @@
     "functionalstorage:simple_compacting_drawer",
     "functionalstorage:framed_storage_controller",
     "functionalstorage:framed_controller_extension",
-    "functionalstorage:framed_simple_compacting_drawer"
+    "functionalstorage:framed_simple_compacting_drawer",
+    "functionalstorage:chemical_1",
+    "functionalstorage:chemical_2",
+    "functionalstorage:chemical_4"
   ]
 }

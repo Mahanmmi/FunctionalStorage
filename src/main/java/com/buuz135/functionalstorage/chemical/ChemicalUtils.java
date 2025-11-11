@@ -24,8 +24,13 @@ public class ChemicalUtils {
         if (tag.isEmpty()) {
             return ChemicalStack.EMPTY;
         }
-        return ChemicalStack.OPTIONAL_CODEC.decode(
-            RegistryOps.create(NbtOps.INSTANCE, provider), tag
-        ).getOrThrow().getFirst();
+        try {
+            return ChemicalStack.OPTIONAL_CODEC.decode(
+                RegistryOps.create(NbtOps.INSTANCE, provider), tag
+            ).getOrThrow().getFirst();
+        } catch (Exception e) {
+            // Handle malformed or empty chemical stack data gracefully
+            return ChemicalStack.EMPTY;
+        }
     }
 }

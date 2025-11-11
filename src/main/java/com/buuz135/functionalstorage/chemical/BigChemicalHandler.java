@@ -85,37 +85,38 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
 
     @Override
     public @NotNull ChemicalStack insertChemical(int tank, @NotNull ChemicalStack stack, @NotNull Action action) {
-        ChemicalStack result = this.tanks[tank].insert(stack, action, AutomationType.MANUAL);
+        ChemicalStack result = this.tanks[tank].insert(stack, action, AutomationType.EXTERNAL);
         if (action == Action.EXECUTE) onChange();
         return result;
     }
 
     @Override
     public @NotNull ChemicalStack extractChemical(int tank, long amount, @NotNull Action action) {
-        ChemicalStack result = this.tanks[tank].extract(amount, action, AutomationType.MANUAL);
+        ChemicalStack result = this.tanks[tank].extract(amount, action, AutomationType.EXTERNAL);
         if (action == Action.EXECUTE) onChange();
         return result;
     }
 
     @Override
     public @NotNull ChemicalStack insertChemical(@NotNull ChemicalStack stack, @NotNull Action action) {
-        // Try existing tanks first
+        // Try existing tanks first - use same pattern as BigFluidHandler.fill()
         for (CustomChemicalTank tank : tanks) {
-            if (!tank.getStack().isEmpty() && tank.isValid(stack)) {
-                ChemicalStack result = tank.insert(stack, action, AutomationType.MANUAL);
-                if (action == Action.EXECUTE) onChange();
-                if (!result.isEmpty()) return result;
-                return ChemicalStack.EMPTY;
-            }
-        }
-        // Then try empty tanks
-        for (CustomChemicalTank tank : tanks) {
-            if (tank.getStack().isEmpty() && tank.isValid(stack)) {
-                ChemicalStack result = tank.insert(stack, action, AutomationType.MANUAL);
+            if (!tank.getStack().isEmpty() && tank.insert(stack, Action.SIMULATE, AutomationType.EXTERNAL).getAmount() < stack.getAmount()) {
+                ChemicalStack result = tank.insert(stack, action, AutomationType.EXTERNAL);
                 if (action == Action.EXECUTE) onChange();
                 return result;
             }
         }
+        
+        // Then try empty tanks
+        for (CustomChemicalTank tank : tanks) {
+            if (tank.getStack().isEmpty() && tank.insert(stack, Action.SIMULATE, AutomationType.EXTERNAL).getAmount() < stack.getAmount()) {
+                ChemicalStack result = tank.insert(stack, action, AutomationType.EXTERNAL);
+                if (action == Action.EXECUTE) onChange();
+                return result;
+            }
+        }
+        
         return stack;
     }
 
@@ -123,7 +124,7 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
     public @NotNull ChemicalStack extractChemical(long amount, @NotNull Action action) {
         for (CustomChemicalTank tank : tanks) {
             if (!tank.getStack().isEmpty()) {
-                ChemicalStack result = tank.extract(amount, action, AutomationType.MANUAL);
+                ChemicalStack result = tank.extract(amount, action, AutomationType.EXTERNAL);
                 if (action == Action.EXECUTE) onChange();
                 if (!result.isEmpty()) return result;
             }
@@ -135,7 +136,7 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
     public @NotNull ChemicalStack extractChemical(@NotNull ChemicalStack stack, @NotNull Action action) {
         for (CustomChemicalTank tank : tanks) {
             if (!tank.getStack().isEmpty() && ChemicalStack.isSameChemical(tank.getStack(), stack)) {
-                ChemicalStack result = tank.extract(stack.getAmount(), action, AutomationType.MANUAL);
+                ChemicalStack result = tank.extract(stack.getAmount(), action, AutomationType.EXTERNAL);
                 if (action == Action.EXECUTE) onChange();
                 if (!result.isEmpty()) return result;
             }
@@ -254,10 +255,7 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
                 return stack;
             }
 
-            if (isDrawerVoid() && ((isDrawerLocked() && isValid(stack)) || 
-                                 (!this.stack.isEmpty() && ChemicalStack.isSameChemical(this.stack, stack)))) {
-                return ChemicalStack.EMPTY;
-            }
+
 
             if (this.stack.isEmpty()) {
                 long insertAmount = Math.min(stack.getAmount(), this.capacity);
@@ -283,6 +281,13 @@ public abstract class BigChemicalHandler implements IChemicalHandler, INBTSerial
             
             ChemicalStack remainder = stack.copy();
             remainder.setAmount(stack.getAmount() - insertAmount);
+            
+            // Void upgrade logic - void excess chemicals that couldn't fit
+            if (isDrawerVoid() && !remainder.isEmpty() && 
+                ((isDrawerLocked() && isValid(stack)) || (!this.stack.isEmpty() && ChemicalStack.isSameChemical(this.stack, stack)))) {
+                return ChemicalStack.EMPTY; // Void the excess
+            }
+            
             return remainder.isEmpty() ? ChemicalStack.EMPTY : remainder;
         }
 

@@ -2,7 +2,6 @@ package com.buuz135.functionalstorage.block;
 
 import com.buuz135.functionalstorage.FunctionalStorage;
 import com.buuz135.functionalstorage.block.tile.ChemicalDrawerTile;
-import com.buuz135.functionalstorage.chemical.ChemicalCapabilities;
 import com.buuz135.functionalstorage.chemical.ChemicalUtils;
 import com.buuz135.functionalstorage.client.item.ChemicalDrawerISTER;
 import com.buuz135.functionalstorage.item.FSAttachments;
@@ -11,7 +10,6 @@ import com.hrznstudio.titanium.block.RotatableBlock;
 import com.hrznstudio.titanium.recipe.generator.TitaniumShapedRecipeBuilder;
 import com.hrznstudio.titanium.tab.TitaniumTab;
 import com.hrznstudio.titanium.util.TileUtil;
-import mekanism.api.chemical.ChemicalStack;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.ChatFormatting;
@@ -19,22 +17,17 @@ import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.data.recipes.RecipeOutput;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.RegistryOps;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.capabilities.BlockCapability;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 
 import org.jetbrains.annotations.Nullable;
@@ -133,19 +126,33 @@ public class ChemicalDrawerBlock extends Drawer<ChemicalDrawerTile> {
         public void appendHoverText(ItemStack itemStack, Item.TooltipContext tooltipContext, List<Component> components, TooltipFlag tooltipFlag) {
             if (itemStack.has(FSAttachments.TILE)) {
                 var provider = tooltipContext.registries();
-                var tileTag = itemStack.get(FSAttachments.TILE).getCompound("chemicalHandler");
-                for (String key : tileTag.getAllKeys()) {
-                    if (key.equals("Capacity")) continue;
-                    var tankCompound = tileTag.getCompound(key);
+                var tile = itemStack.get(FSAttachments.TILE);
+                var tileTag = tile.getCompound("chemicalHandler");
+                components.add(Component.translatable("drawer.block.contents").withStyle(ChatFormatting.GRAY));
+                for (int i = 0; i < drawerBlock.type.getSlots(); i++) {
+                    var tankCompound = tileTag.getCompound(String.valueOf(i));
                     if (!tankCompound.isEmpty()) {
-                        var stack = ChemicalUtils.deserializeChemical(provider, tankCompound);
+                        var stack = ChemicalUtils.deserializeChemical(provider, tankCompound.getCompound("Stack"));
                         if (!stack.isEmpty()) {
-                            var component = Component.literal("")
-                                    .append(Component.literal(stack.getChemical().toString()).withStyle(ChatFormatting.WHITE))
-                                    .append(Component.literal(": " + NumberUtils.getFormatedFluidBigNumber(stack.getAmount())).withStyle(ChatFormatting.GRAY));
-                            components.add(component);
+                            int chemicalColor = stack.getChemicalTint();
+                            // Show infinite amount for creative drawers
+                            long displayAmount = (tile.contains("isCreative") && tile.getBoolean("isCreative")) ? Long.MAX_VALUE : stack.getAmount();
+                            components.add(Component.literal(" - " + ChatFormatting.YELLOW + NumberUtils.getFormatedFluidBigNumber(displayAmount) + ChatFormatting.WHITE + " of ").append(stack.getChemical().getTextComponent().copy().withStyle(style -> style.withColor(chemicalColor))));
                         }
                     }
+                }
+                components.add(Component.translatable("drawer.block.upgrades").withStyle(ChatFormatting.GRAY));
+                var anyupgrade = false;
+                if (tile.contains("isCreative") && tile.getBoolean("isCreative")) {
+                    components.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.translatable("drawer.block.upgrades.is_creative").withStyle(ChatFormatting.LIGHT_PURPLE)));
+                    anyupgrade = true;
+                }
+                if (tile.contains("isVoid") && tile.getBoolean("isVoid")) {
+                    components.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.translatable("drawer.block.upgrades.is_void").withStyle(ChatFormatting.BLUE)));
+                    anyupgrade = true;
+                }
+                if (!anyupgrade) {
+                    components.add(Component.literal("- ").withStyle(ChatFormatting.GRAY).append(Component.translatable("drawer.block.upgrades.none").withStyle(ChatFormatting.GRAY)));
                 }
             }
         }
@@ -166,21 +173,49 @@ public class ChemicalDrawerBlock extends Drawer<ChemicalDrawerTile> {
     }
 
     @Override
+    public int getSignal(BlockState p_60483_, BlockGetter blockGetter, BlockPos blockPos, Direction p_60486_) {
+        ChemicalDrawerTile tile = TileUtil.getTileEntity(blockGetter, blockPos, ChemicalDrawerTile.class).orElse(null);
+        if (tile != null) {
+            for (int i = 0; i < tile.getUtilityUpgrades().getSlots(); i++) {
+                ItemStack stack = tile.getUtilityUpgrades().getStackInSlot(i);
+                if (stack.getItem().equals(FunctionalStorage.REDSTONE_UPGRADE.get())) {
+                    // Calculate total capacity and stored amount across all tanks
+                    long totalStored = 0;
+                    long totalCapacity = 0;
+                    
+                    for (int tankIndex = 0; tankIndex < tile.getChemicalHandler().getChemicalTanks(); tankIndex++) {
+                        totalStored += tile.getChemicalHandler().getChemicalInTank(tankIndex).getAmount();
+                        totalCapacity += tile.getChemicalHandler().getChemicalTankCapacity(tankIndex);
+                    }
+                    
+                    if (totalCapacity > 0) {
+                        return (int) (totalStored * 15 / totalCapacity);
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
+    @Override
     public int getAnalogOutputSignal(BlockState blockState, net.minecraft.world.level.Level level, BlockPos blockPos) {
         ChemicalDrawerTile tile = TileUtil.getTileEntity(level, blockPos, ChemicalDrawerTile.class).orElse(null);
         if (tile != null) {
-            int redstoneSlot = 0;
             for (int i = 0; i < tile.getUtilityUpgrades().getSlots(); i++) {
                 var stack = tile.getUtilityUpgrades().getStackInSlot(i);
-                if (stack.getItem().equals(FunctionalStorage.REDSTONE_UPGRADE.get()) && stack.has(FSAttachments.SLOT)) {
-                    redstoneSlot = stack.get(FSAttachments.SLOT);
-                }
-            }
-            if (redstoneSlot < tile.getChemicalHandler().getChemicalTanks()) {
-                long stored = tile.getChemicalHandler().getChemicalInTank(redstoneSlot).getAmount();
-                long capacity = tile.getChemicalHandler().getChemicalTankCapacity(redstoneSlot);
-                if (capacity > 0) {
-                    return (int) (stored * 15 / capacity);
+                if (stack.getItem().equals(FunctionalStorage.REDSTONE_UPGRADE.get())) {
+                    // Calculate total capacity and stored amount across all tanks
+                    long totalStored = 0;
+                    long totalCapacity = 0;
+                    
+                    for (int tankIndex = 0; tankIndex < tile.getChemicalHandler().getChemicalTanks(); tankIndex++) {
+                        totalStored += tile.getChemicalHandler().getChemicalInTank(tankIndex).getAmount();
+                        totalCapacity += tile.getChemicalHandler().getChemicalTankCapacity(tankIndex);
+                    }
+                    
+                    if (totalCapacity > 0) {
+                        return (int) (totalStored * 15 / totalCapacity);
+                    }
                 }
             }
         }

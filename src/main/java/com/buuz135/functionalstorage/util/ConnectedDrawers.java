@@ -1,6 +1,7 @@
 package com.buuz135.functionalstorage.util;
 
 import com.buuz135.functionalstorage.block.config.FunctionalStorageConfig;
+import com.buuz135.functionalstorage.block.tile.ChemicalDrawerTile;
 import com.buuz135.functionalstorage.block.tile.FluidDrawerTile;
 import com.buuz135.functionalstorage.block.tile.ItemControllableDrawerTile;
 import com.buuz135.functionalstorage.block.tile.StorageControllerExtensionTile;
@@ -17,6 +18,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
+import mekanism.api.chemical.IChemicalHandler;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -28,6 +30,7 @@ public class ConnectedDrawers implements INBTSerializable<CompoundTag> {
     private List<Long> connectedDrawers;
     private List<IItemHandler> itemHandlers;
     private List<IFluidHandler> fluidHandlers;
+    private List<IChemicalHandler> chemicalHandlers;
     private Level level;
     private int extensions;
     private VoxelShape cachedVoxelShape;
@@ -38,6 +41,7 @@ public class ConnectedDrawers implements INBTSerializable<CompoundTag> {
         this.connectedDrawers = new ArrayList<>();
         this.itemHandlers = new ArrayList<>();
         this.fluidHandlers = new ArrayList<>();
+        this.chemicalHandlers = new ArrayList<>();
         this.level = level;
         this.extensions = 0;
 
@@ -51,6 +55,7 @@ public class ConnectedDrawers implements INBTSerializable<CompoundTag> {
     public void rebuild() {
         this.itemHandlers = new ArrayList<>();
         this.fluidHandlers = new ArrayList<>();
+        this.chemicalHandlers = new ArrayList<>();
         this.extensions = 0;
         if (level != null && !level.isClientSide()) {
             var extraRange = controllerTile.getStorageMultiplier();
@@ -74,11 +79,17 @@ public class ConnectedDrawers implements INBTSerializable<CompoundTag> {
                 if (entity instanceof FluidDrawerTile fluidDrawerTile) {
                     this.fluidHandlers.add(fluidDrawerTile.getFluidHandler());
                 }
+                if (entity instanceof ChemicalDrawerTile chemicalDrawerTile) {
+                    this.chemicalHandlers.add(chemicalDrawerTile.getChemicalHandler());
+                }
             }
         }
 
         this.controllerTile.inventoryHandler.invalidateSlots();
         this.controllerTile.fluidHandler.invalidateSlots();
+        if (this.controllerTile.chemicalHandler != null) {
+            this.controllerTile.chemicalHandler.invalidateSlots();
+        }
     }
 
     public void rebuildShapes() {
@@ -135,6 +146,10 @@ public class ConnectedDrawers implements INBTSerializable<CompoundTag> {
 
     public List<IFluidHandler> getFluidHandlers() {
         return fluidHandlers;
+    }
+
+    public List<IChemicalHandler> getChemicalHandlers() {
+        return chemicalHandlers;
     }
 
     public int getExtensions() {

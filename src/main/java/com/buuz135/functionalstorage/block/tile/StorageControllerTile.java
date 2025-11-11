@@ -3,6 +3,7 @@ package com.buuz135.functionalstorage.block.tile;
 import com.buuz135.functionalstorage.FunctionalStorage;
 import com.buuz135.functionalstorage.block.StorageControllerBlock;
 import com.buuz135.functionalstorage.block.config.FunctionalStorageConfig;
+import com.buuz135.functionalstorage.chemical.ControllerChemicalHandler;
 import com.buuz135.functionalstorage.fluid.ControllerFluidHandler;
 import com.buuz135.functionalstorage.inventory.ControllerInventoryHandler;
 import com.buuz135.functionalstorage.inventory.ILockable;
@@ -34,6 +35,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
+import mekanism.api.chemical.IChemicalHandler;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -48,6 +50,7 @@ public abstract class StorageControllerTile<T extends StorageControllerTile<T>> 
     protected ConnectedDrawers connectedDrawers;
     public ControllerInventoryHandler inventoryHandler;
     public ControllerFluidHandler fluidHandler;
+    public ControllerChemicalHandler chemicalHandler;
 
     public StorageControllerTile(BasicTileBlock<T> base, BlockEntityType<T> entityType, BlockPos pos, BlockState state) {
         super(base, entityType, pos, state);
@@ -64,6 +67,16 @@ public abstract class StorageControllerTile<T extends StorageControllerTile<T>> 
                 return connectedDrawers;
             }
         };
+        if (FunctionalStorage.MEKANISM_LOADED) {
+            this.chemicalHandler = new ControllerChemicalHandler() {
+                @Override
+                public ConnectedDrawers getDrawers() {
+                    return connectedDrawers;
+                }
+            };
+        } else {
+            this.chemicalHandler = null;
+        }
     }
 
     @Override
@@ -79,7 +92,7 @@ public abstract class StorageControllerTile<T extends StorageControllerTile<T>> 
     @Override
     public void serverTick(Level level, BlockPos pos, BlockState state, T blockEntity) {
         super.serverTick(level, pos, state, blockEntity);
-        if (this.connectedDrawers.getConnectedDrawers().size() != (this.connectedDrawers.getItemHandlers().size() + this.connectedDrawers.getFluidHandlers().size() + this.connectedDrawers.getExtensions())) {
+        if (this.connectedDrawers.getConnectedDrawers().size() != (this.connectedDrawers.getItemHandlers().size() + this.connectedDrawers.getFluidHandlers().size() + this.connectedDrawers.getChemicalHandlers().size() + this.connectedDrawers.getExtensions())) {
             this.connectedDrawers.getConnectedDrawers().removeIf(aLong -> !(this.getLevel().getBlockEntity(BlockPos.of(aLong)) instanceof ControllableDrawerTile<?>));
             this.connectedDrawers.setLevel(getLevel());
             this.connectedDrawers.rebuild();
@@ -163,6 +176,10 @@ public abstract class StorageControllerTile<T extends StorageControllerTile<T>> 
     @Override
     public IFluidHandler getFluidHandler(@Nullable Direction direction) {
         return fluidHandler;
+    }
+
+    public IChemicalHandler getChemicalHandler(@Nullable Direction direction) {
+        return chemicalHandler;
     }
 
     @Override

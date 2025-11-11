@@ -27,7 +27,7 @@ public class FunctionalStorageBlockTagsProvider extends BlockTagsProvider {
                 tTagAppender.add(blockRegistryObject.getKey());
             }
         }
-        this.tag(BlockTags.MINEABLE_WITH_PICKAXE)
+        TagAppender<Block> pickaxeAppender = this.tag(BlockTags.MINEABLE_WITH_PICKAXE)
                 .add(FunctionalStorage.COMPACTING_DRAWER.getBlock())
                 .add(FunctionalStorage.DRAWER_CONTROLLER.getBlock())
                 .add(FunctionalStorage.ARMORY_CABINET.getBlock())
@@ -43,8 +43,15 @@ public class FunctionalStorageBlockTagsProvider extends BlockTagsProvider {
                 .add(FunctionalStorage.SIMPLE_COMPACTING_DRAWER.getBlock())
                 .add(FunctionalStorage.FRAMED_DRAWER_CONTROLLER.getBlock())
                 .add(FunctionalStorage.FRAMED_CONTROLLER_EXTENSION.getBlock())
-                .add(FunctionalStorage.FRAMED_SIMPLE_COMPACTING_DRAWER.getBlock())
-        ;
+                .add(FunctionalStorage.FRAMED_SIMPLE_COMPACTING_DRAWER.getBlock());
+        
+        // Add chemical drawers to pickaxe mineable tag only when Mekanism is loaded and drawers are registered
+        if (FunctionalStorage.MEKANISM_LOADED) {
+            pickaxeAppender
+                .add(FunctionalStorage.CHEMICAL_DRAWER_1.block().getKey())
+                .add(FunctionalStorage.CHEMICAL_DRAWER_2.block().getKey())
+                .add(FunctionalStorage.CHEMICAL_DRAWER_4.block().getKey());
+        }
     }
 
 }

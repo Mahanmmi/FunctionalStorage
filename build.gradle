@@ -82,10 +82,11 @@ dependencies {
     implementation "curse.maven:jade-324717:5444008"
     compileOnly "curse.maven:the-one-probe-245211:5475189"
     runtimeOnly "curse.maven:applied-energistics-2-223794:5729094"
-    
-    // Mekanism dependencies for chemical drawer support (following Applied-Mekanistics pattern)
+
     compileOnly "mekanism:Mekanism:1.21.1-$mekanism_version:api"  // Mekanism API for compilation
     runtimeOnly "mekanism:Mekanism:1.21.1-$mekanism_version:all"  // Full Mekanism for runtime/testing
+    runtimeOnly "curse.maven:applied-mekanistics-574300:5651451"  // Very likely that it'll get used with this mod, interactions should work -- testing only
+    runtimeOnly "curse.maven:mega-cells-622112:5662141"           // Same as above -- testing only
 }
 
 jar {
